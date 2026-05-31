@@ -17,9 +17,11 @@ def init_observability(session_id: str, job_description: str) -> tuple[Any, Any]
     """Initialize Weave (LLM tracing) and W&B (session run tracking)."""
     global _initialized
 
+    entity = os.environ.get("WANDB_ENTITY", "")
     project = os.environ.get("WANDB_PROJECT", "loopprep")
+    weave_project = f"{entity}/{project}" if entity else project
 
-    weave_client = weave.init(project)
+    weave_client = weave.init(weave_project)
     run = wandb.init(
         project=project,
         name=f"session-{session_id[:8]}",
