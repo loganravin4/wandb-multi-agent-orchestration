@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     model_interviewer: str = "meta-llama/Llama-3.3-70B-Instruct"
     model_delivery: str = "meta-llama/Llama-3.1-8B-Instruct"
     model_report: str = "deepseek-ai/DeepSeek-V3-0324"
+    # LLM-as-judge model for Weave evaluations.
+    model_judge: str = "meta-llama/Llama-3.3-70B-Instruct"
 
     # Tavily
     tavily_api_key: str = ""
