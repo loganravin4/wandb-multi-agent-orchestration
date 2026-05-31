@@ -183,9 +183,12 @@ async def submit_answer(session_id: str, body: AnswerRequest) -> AnswerResponse:
         "delivery_score": delivery_result["delivery_score"],
         "wpm": delivery_result["wpm"],
         "filler_rate": delivery_result["filler_rate"],
-        "hint_used": False,
+        "hint_used": state.get("hint_used", False),
         "feedback": content_result["feedback"],
     }
+
+    # Reset so a hint used on this question doesn't carry over to the next one.
+    state["hint_used"] = False
 
     results = list(state.get("results", []))
     results.append(result)
@@ -233,6 +236,10 @@ async def get_hint(session_id: str, body: HintRequest) -> HintResponse:
 
     question = questions[body.question_index]
     hint = await _run(get_socratic_hint, question, body.transcript)
+
+    # Mark that a hint was used for the current question; /answer consumes it.
+    state["hint_used"] = True
+    _sessions[session_id] = state
 
     return HintResponse(hint=hint)
 
