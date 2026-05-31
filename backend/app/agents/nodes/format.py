@@ -22,17 +22,23 @@ def format_node(state: SessionState) -> SessionState:
     response = llm.invoke([
         SystemMessage(content=(
             "Generate exactly 3 mock interview questions as a JSON array. "
-            'Each item: {"index": int, "type": "coding"|"behavioral"|"system_design"|"brain_teaser", '
-            '"subtype": str, "text": str, "difficulty": "easy"|"medium"|"hard"}. '
+            "Base schema for every question:\n"
+            '  {"index": int, "type": "coding"|"behavioral"|"system_design"|"brain_teaser", '
+            '"subtype": str, "text": str, "difficulty": "easy"|"medium"|"hard"}\n\n'
             "Choose subtype from these valid values per type:\n"
-            "  coding      → algorithms | data_structures | dynamic_programming | debugging | implementation\n"
+            "  coding        → algorithms | data_structures | dynamic_programming | debugging | implementation\n"
             "  system_design → distributed_systems | api_design | database_design | scalability | microservices\n"
-            "  behavioral  → leadership | conflict_resolution | ownership | collaboration | impact\n"
-            "  brain_teaser → logic_puzzle | estimation | lateral_thinking\n"
-            "Only include brain_teaser questions if the company is known for them (e.g. quant firms, Google, Jane Street). "
-            "Calibrate question type mix and difficulty to the seniority level and tech stack. "
-            "Make the questions specific to the role — reference actual technologies and responsibilities. "
-            "Return only valid JSON."
+            "  behavioral    → leadership | conflict_resolution | ownership | collaboration | impact\n"
+            "  brain_teaser  → logic_puzzle | estimation | lateral_thinking\n\n"
+            "For CODING questions, add these extra fields to the JSON object:\n"
+            '  "function_signature": str  — a valid Python def line with typed params and return type\n'
+            '     e.g. "def two_sum(nums: list[int], target: int) -> list[int]:"\n'
+            '  "examples": [{"input": str, "output": str, "explanation": str}, ...]  — exactly 2 examples\n'
+            '     Use concrete values: input = "nums = [2,7,11,15], target = 9", output = "[0,1]"\n'
+            '  "constraints": [str, ...]  — 3-5 constraints like "1 <= nums.length <= 10^4"\n\n'
+            "Only include brain_teaser if the company is known for them (quant firms, Google, Jane Street). "
+            "Calibrate type mix and difficulty to seniority and tech stack. "
+            "Make questions specific to the role. Return only valid JSON."
         )),
         HumanMessage(content=(
             f"Role: {state.get('role', '')} at {state.get('company', '')}\n"

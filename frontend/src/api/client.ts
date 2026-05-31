@@ -1,11 +1,20 @@
 const API_BASE = import.meta.env.VITE_API_BASE ?? "/api";
 
+export type Example = {
+  input: string;
+  output: string;
+  explanation?: string;
+};
+
 export type Question = {
   index: number;
   type: "coding" | "behavioral" | "system_design" | "brain_teaser";
   subtype: string;
   text: string;
   difficulty: "easy" | "medium" | "hard";
+  function_signature?: string;
+  examples?: Example[];
+  constraints?: string[];
 };
 
 export type CreateSessionPayload = {

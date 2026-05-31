@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal, TypedDict
+from typing import Literal, NotRequired, TypedDict
 
 
 QuestionType = Literal["coding", "behavioral", "system_design", "brain_teaser"]
@@ -19,12 +19,22 @@ QuestionSubtype = Literal[
 ]
 
 
+class Example(TypedDict):
+    input: str
+    output: str
+    explanation: NotRequired[str]
+
+
 class Question(TypedDict):
     index: int
     type: QuestionType
     subtype: QuestionSubtype
     text: str
     difficulty: Literal["easy", "medium", "hard"]
+    # Coding / brain_teaser enrichment fields
+    function_signature: NotRequired[str]   # e.g. "def two_sum(nums: list[int], target: int) -> list[int]:"
+    examples: NotRequired[list[Example]]   # 2-3 input/output examples
+    constraints: NotRequired[list[str]]    # ["1 <= n <= 10^4", "all values are unique", ...]
 
 
 class QuestionResult(TypedDict):
