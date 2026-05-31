@@ -7,9 +7,8 @@ import re
 
 import weave
 
-from app.config import get_settings
 from app.observability import log_question_queue_artifact, publish_question_dataset
-from app.services.llm import complete
+from app.services.llm import get_llm
 from app.state import Question, SessionState
 
 
@@ -36,10 +35,10 @@ def format_node(state: SessionState) -> SessionState:
                     f"Role: {state.get('role', '')} at {state.get('company', '')}"
                 ),
             },
-        ],
-        model=get_settings().model_format,
+        ]
     )
 
+    raw = response.content if isinstance(response.content, str) else str(response.content)
     match = re.search(r"\[[\s\S]*\]", raw)
     questions: list[Question] = json.loads(match.group()) if match else []
 

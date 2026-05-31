@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import weave
 
-from app.config import get_settings
 from app.observability import log_research_metrics
-from app.services.llm import complete
+from app.services.llm import get_llm
 from app.services.research import search
 from app.state import SessionState
 
@@ -38,10 +37,10 @@ def research_node(state: SessionState) -> SessionState:
                 "role": "user",
                 "content": f"Job: {state.get('job_description', '')}\n\nResearch:\n{snippets}",
             },
-        ],
-        model=get_settings().model_research,
+        ]
     )
 
+    text = response.content if isinstance(response.content, str) else str(response.content)
     interview_format = text[:500]
     common_topics = [line.strip("- ").strip() for line in text.splitlines() if line.strip().startswith("-")][:10]
 

@@ -11,8 +11,7 @@ import re
 
 import weave
 
-from app.config import get_settings
-from app.services.llm import complete
+from app.services.llm import get_llm
 from app.state import Question
 
 VALID_TYPES = {"coding", "behavioral", "system_design"}
@@ -48,7 +47,7 @@ def relevance_judge(job_description: str, questions: list[Question]) -> float:
         return 0.0
 
     listed = "\n".join(f"{i + 1}. {q.get('text', '')}" for i, q in enumerate(questions))
-    raw = complete(
+    response = get_llm("default").invoke(
         [
             {
                 "role": "system",
@@ -63,10 +62,9 @@ def relevance_judge(job_description: str, questions: list[Question]) -> float:
                 "role": "user",
                 "content": f"Job description:\n{job_description}\n\nQuestions:\n{listed}",
             },
-        ],
-        model=get_settings().model_judge,
-        temperature=0.0,
+        ]
     )
+    raw = response.content if isinstance(response.content, str) else str(response.content)
 
     match = re.search(r"\{[\s\S]*\}", raw)
     if not match:
