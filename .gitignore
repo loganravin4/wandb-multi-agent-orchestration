@@ -224,3 +224,6 @@ frontend/dist/
 
 # Whisper model cache
 .whisper/
+
+# Claude Code local settings (per-machine MCP approvals / overrides)
+.claude/settings.local.json

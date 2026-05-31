@@ -353,27 +353,6 @@ Must work end to end before any stretch goals:
 
 ---
 
-## Team Split
-
-**Person 1 — Ingest Pipeline**
-- `agents.py`: JD Parser, Research Agent, Format Agent
-- `observability.py`: weave.init(), wandb.init(), weave.Dataset, wandb.Artifact, logging helpers
-- Goal by 1pm: paste a JD, get a question queue, see three agent traces in Weave
-
-**Person 2 — Interview Loop + Audio + API**
-- `graph.py`: LangGraph state machine, all nodes and edges
-- `main.py`: FastAPI endpoints, Whisper transcription, session state store, per-turn W&B logging
-- `Interview.tsx`: MediaRecorder audio capture, hint button, feedback display
-- Goal by 2:30pm: record an answer, get a transcript back, see next question appear
-
-**Person 3 — Evaluation + Frontend + Demo**
-- `agents.py`: Interviewer Agent (content eval + Socratic hint), Delivery Agent, Report Agent
-- `weave.Evaluation` wired in Report Agent
-- `JDInput.tsx`, `Report.tsx`, `App.tsx`: full frontend session flow
-- Goal by 3:30pm: content + delivery scores showing after every answer, report at end
-
----
-
 ## Demo Script (3 minutes)
 
 1. Paste a real Google L4 SWE JD on screen

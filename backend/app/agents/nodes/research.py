@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import weave
-from langchain_core.messages import HumanMessage, SystemMessage
 
 from app.observability import log_research_metrics
 from app.services.llm import get_llm
@@ -27,13 +26,17 @@ def research_node(state: SessionState) -> SessionState:
     llm = get_llm("default")
     response = llm.invoke(
         [
-            SystemMessage(
-                content=(
+            {
+                "role": "system",
+                "content": (
                     "You summarize interview research for a mock interview prep session. "
                     "Return a short interview_format paragraph and a bullet list of common_topics."
-                )
-            ),
-            HumanMessage(content=f"Job: {state.get('job_description', '')}\n\nResearch:\n{snippets}"),
+                ),
+            },
+            {
+                "role": "user",
+                "content": f"Job: {state.get('job_description', '')}\n\nResearch:\n{snippets}",
+            },
         ]
     )
 

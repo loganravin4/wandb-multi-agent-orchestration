@@ -6,8 +6,10 @@ python-multipart>=0.0.12
 # Agent orchestration
 langgraph>=0.2.0
 langchain-openai>=0.2.0
-openai>=1.0.0
 langchain-core>=0.3.0
+
+# Inference (W&B Serverless Inference, OpenAI-compatible)
+openai>=1.54.0
 
 # Research
 tavily-python>=0.5.0

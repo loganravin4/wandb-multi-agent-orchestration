@@ -3,6 +3,7 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
+import weave
 from faster_whisper import WhisperModel
 
 from app.config import get_settings
@@ -18,6 +19,7 @@ def _load_model() -> WhisperModel:
     )
 
 
+@weave.op()
 def transcribe_audio(audio_path: str | Path) -> str:
     model = _load_model()
     segments, _ = model.transcribe(str(audio_path))

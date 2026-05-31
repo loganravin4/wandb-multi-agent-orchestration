@@ -17,6 +17,19 @@ class Settings(BaseSettings):
     api_port: int = 8000
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
+    # W&B Serverless Inference (OpenAI-compatible). No Anthropic key needed.
+    inference_base_url: str = "https://api.inference.wandb.ai/v1"
+
+    # Per-agent model IDs (override via env, e.g. MODEL_RESEARCH=...).
+    model_jd_parser: str = "meta-llama/Llama-3.1-8B-Instruct"
+    model_research: str = "meta-llama/Llama-3.3-70B-Instruct"
+    model_format: str = "meta-llama/Llama-3.3-70B-Instruct"
+    model_interviewer: str = "meta-llama/Llama-3.3-70B-Instruct"
+    model_delivery: str = "meta-llama/Llama-3.1-8B-Instruct"
+    model_report: str = "deepseek-ai/DeepSeek-V3-0324"
+    # LLM-as-judge model for Weave evaluations.
+    model_judge: str = "meta-llama/Llama-3.3-70B-Instruct"
+
     # Tavily
     tavily_api_key: str = ""
 
@@ -33,6 +46,16 @@ class Settings(BaseSettings):
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
+    def missing_required(self) -> list[str]:
+        """Names of required keys that are unset (PRD: all four needed to start)."""
+        required = {
+            "WANDB_API_KEY": self.wandb_api_key,
+            "WANDB_ENTITY": self.wandb_entity,
+            "WANDB_PROJECT": self.wandb_project,
+            "TAVILY_API_KEY": self.tavily_api_key,
+        }
+        return [name for name, value in required.items() if not value]
 
 
 @lru_cache

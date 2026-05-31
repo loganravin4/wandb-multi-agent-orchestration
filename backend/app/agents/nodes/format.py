@@ -6,7 +6,6 @@ import json
 import re
 
 import weave
-from langchain_core.messages import HumanMessage, SystemMessage
 
 from app.observability import log_question_queue_artifact, publish_question_dataset
 from app.services.llm import get_llm
@@ -19,21 +18,23 @@ def format_node(state: SessionState) -> SessionState:
     llm = get_llm("default")
     response = llm.invoke(
         [
-            SystemMessage(
-                content=(
+            {
+                "role": "system",
+                "content": (
                     "Generate exactly 3 mock interview questions as JSON array. "
                     'Each item: {"index": int, "type": "coding"|"behavioral"|"system_design", '
                     '"text": str, "difficulty": "easy"|"medium"|"hard"}. '
                     "Return only valid JSON."
-                )
-            ),
-            HumanMessage(
-                content=(
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
                     f"Format: {state.get('interview_format', '')}\n"
                     f"Topics: {state.get('common_topics', [])}\n"
                     f"Role: {state.get('role', '')} at {state.get('company', '')}"
-                )
-            ),
+                ),
+            },
         ]
     )
 
