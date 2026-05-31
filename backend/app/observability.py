@@ -8,25 +8,55 @@ from typing import Any
 import wandb
 import weave
 
+from app.config import get_settings
 from app.state import Question
 
-_initialized = False
+_weave_client: Any = None
+
+
+def _export_wandb_credentials() -> None:
+    """Bridge the .env-loaded key into the process env.
+
+    pydantic-settings reads .env into the Settings object but does NOT export
+    to os.environ, and weave/wandb authenticate via the WANDB_API_KEY env var.
+    Without this, weave.init() would never see the key from .env.
+    """
+    settings = get_settings()
+    if settings.wandb_api_key and not os.environ.get("WANDB_API_KEY"):
+        os.environ["WANDB_API_KEY"] = settings.wandb_api_key
+    if settings.wandb_entity and not os.environ.get("WANDB_ENTITY"):
+        os.environ["WANDB_ENTITY"] = settings.wandb_entity
+
+
+def init_weave() -> Any:
+    """Initialize Weave LLM tracing once, at app startup. Idempotent."""
+    global _weave_client
+    if _weave_client is not None:
+        return _weave_client
+
+    _export_wandb_credentials()
+    settings = get_settings()
+    project = (
+        f"{settings.wandb_entity}/{settings.wandb_project}"
+        if settings.wandb_entity
+        else settings.wandb_project
+    )
+    _weave_client = weave.init(project)
+    return _weave_client
 
 
 def init_observability(session_id: str, job_description: str) -> tuple[Any, Any]:
-    """Initialize Weave (LLM tracing) and W&B (session run tracking)."""
-    global _initialized
+    """Ensure Weave tracing is up and start a per-session W&B run."""
+    weave_client = init_weave()
 
-    project = os.environ.get("WANDB_PROJECT", "loopprep")
-
-    weave_client = weave.init(project)
+    settings = get_settings()
     run = wandb.init(
-        project=project,
+        project=settings.wandb_project,
+        entity=settings.wandb_entity or None,
         name=f"session-{session_id[:8]}",
         config={"session_id": session_id, "job_description_preview": job_description[:500]},
         reinit=True,
     )
-    _initialized = True
     return weave_client, run
 
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
+import weave
 import whisper
 
 from app.config import get_settings
@@ -16,6 +17,7 @@ def _load_model() -> whisper.Whisper:
     return whisper.load_model(settings.whisper_model, device=settings.whisper_device)
 
 
+@weave.op()
 def transcribe_audio(audio_path: str | Path) -> str:
     """Transcribe an audio file and return the text transcript."""
     model = _load_model()

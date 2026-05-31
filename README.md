@@ -8,7 +8,8 @@ Multi-agent interview prep powered by LangGraph, with W&B Weave tracing and sess
 |---|---|
 | Agent orchestration | LangGraph |
 | Backend API | FastAPI + Uvicorn |
-| LLM | Claude `claude-sonnet-4-20250514` (Anthropic) |
+| Inference client | `openai` SDK (W&B Serverless Inference endpoint) |
+| LLM | W&B Serverless Inference (Llama 3.1/3.3, DeepSeek-V3) |
 | Transcription | Whisper local (`openai-whisper`, base model, CPU) |
 | LLM tracing + eval | W&B Weave |
 | Session metrics | W&B Core |
@@ -119,8 +120,9 @@ Interview loop, scoring, and report nodes are stubbed for you to build next.
 
 ## Environment variables
 
-See [`.env.example`](.env.example). Required for full functionality:
+See [`.env.example`](.env.example). All four are required before the backend will start:
 
-- `ANTHROPIC_API_KEY`
+- `WANDB_API_KEY` (also authenticates W&B Serverless Inference — no Anthropic key needed)
+- `WANDB_ENTITY`
+- `WANDB_PROJECT`
 - `TAVILY_API_KEY`
-- `WANDB_API_KEY`

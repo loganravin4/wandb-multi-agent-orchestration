@@ -5,37 +5,40 @@ from __future__ import annotations
 import json
 import re
 
-from langchain_core.messages import HumanMessage, SystemMessage
+import weave
 
+from app.config import get_settings
 from app.observability import log_question_queue_artifact, publish_question_dataset
-from app.services.llm import get_llm
+from app.services.llm import complete
 from app.state import Question, SessionState
 
 
+@weave.op()
 def format_node(state: SessionState) -> SessionState:
     """Generate an ordered question queue from research context."""
-    llm = get_llm()
-    response = llm.invoke(
+    raw = complete(
         [
-            SystemMessage(
-                content=(
+            {
+                "role": "system",
+                "content": (
                     "Generate exactly 3 mock interview questions as JSON array. "
                     'Each item: {"index": int, "type": "coding"|"behavioral"|"system_design", '
                     '"text": str, "difficulty": "easy"|"medium"|"hard"}. '
                     "Return only valid JSON."
-                )
-            ),
-            HumanMessage(
-                content=(
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
                     f"Format: {state.get('interview_format', '')}\n"
                     f"Topics: {state.get('common_topics', [])}\n"
                     f"Role: {state.get('role', '')} at {state.get('company', '')}"
-                )
-            ),
-        ]
+                ),
+            },
+        ],
+        model=get_settings().model_format,
     )
 
-    raw = response.content if isinstance(response.content, str) else str(response.content)
     match = re.search(r"\[[\s\S]*\]", raw)
     questions: list[Question] = json.loads(match.group()) if match else []
 
