@@ -35,7 +35,7 @@ def generate_report(results: list[QuestionResult], session_id: str) -> dict:
     avg_overall = round((avg_content + avg_delivery) / 2, 2)
 
     results_summary = "\n".join(
-        f"Q{r['question_index'] + 1} ({r['question_type']}): "
+        f"Q{r['question_index'] + 1} ({r['question_type']}/{r.get('question_subtype', '')}): "
         f"content={r['content_score']}/10, delivery={r['delivery_score']}/10 "
         f"| {r.get('feedback', '')}"
         for r in results

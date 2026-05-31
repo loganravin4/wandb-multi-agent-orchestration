@@ -8,6 +8,7 @@ import {
   submitAnswer,
   transcribeAudio,
 } from "../api/client";
+import CodingIDE from "./CodingIDE";
 
 type Phase =
   | "idle"
@@ -154,6 +155,31 @@ export default function Interview({ sessionId, questions, onComplete }: Props) {
   const btnBase =
     "font-mono text-sm uppercase tracking-widest bg-transparent py-2 px-4 rounded-sm border transition-colors";
 
+  // Coding questions get the full-screen IDE treatment
+  if (currentQuestion.type === "coding") {
+    return (
+      <CodingIDE
+        key={questionIndex}
+        sessionId={sessionId}
+        question={currentQuestion}
+        questionIndex={questionIndex}
+        totalQuestions={questions.length}
+        onScored={async (result) => {
+          if (result.session_complete) {
+            try {
+              const report = await getReport(sessionId);
+              onComplete(report);
+            } catch {
+              // report not ready yet — Interview will show next question
+            }
+          } else {
+            nextQuestion();
+          }
+        }}
+      />
+    );
+  }
+
   return (
     <div>
       {/* Header */}
@@ -176,8 +202,9 @@ export default function Interview({ sessionId, questions, onComplete }: Props) {
 
       {/* Question card */}
       <div className="bg-[#111822] border-l-2 border-[#00e5ff] pl-5 pr-4 py-4 mb-4">
-        <div className="flex gap-3 mb-3">
+        <div className="flex gap-3 mb-3 flex-wrap">
           <Badge type={currentQuestion.type} />
+          {currentQuestion.subtype && <Badge type={currentQuestion.subtype} variant="subtype" />}
           <Badge type={currentQuestion.difficulty} />
         </div>
         <p className="font-mono text-[0.95rem] leading-relaxed text-[#e8edf3]">
@@ -406,17 +433,19 @@ function ScoreTile({
   );
 }
 
-function Badge({ type }: { type: string }) {
+function Badge({ type, variant = "type" }: { type: string; variant?: "type" | "subtype" }) {
   const colors: Record<string, string> = {
     coding: "text-[#00e5ff]",
     behavioral: "text-[#00ff87]",
     system_design: "text-[#ffb300]",
+    brain_teaser: "text-[#c084fc]",
     easy: "text-[#445566]",
     medium: "text-[#445566]",
     hard: "text-[#445566]",
   };
-  const color = colors[type] ?? "text-[#8899aa]";
-  return <span className={`font-mono text-xs tracking-wide ${color}`}>[{type}]</span>;
+  const color = variant === "subtype" ? "text-[#445566]" : (colors[type] ?? "text-[#8899aa]");
+  const label = type.replace(/_/g, " ");
+  return <span className={`font-mono text-xs tracking-wide ${color}`}>[{label}]</span>;
 }
 
 function scoreColorClass(value: number): string {
