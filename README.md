@@ -67,6 +67,26 @@
   3. Dev mode with Vite hot reload:
   docker compose --profile dev up --build
 
+  ## W&B MCP server (Claude Code)
+
+  This repo ships a pre-configured W&B MCP server so coding agents (and you) can
+  query Weave traces, W&B runs, and evals directly from Claude Code. It is
+  committed and auto-approved — no per-developer approval prompt:
+
+  - `.mcp.json` — defines the hosted `wandb` server, authenticated with
+    `${WANDB_API_KEY}` (no secret committed).
+  - `.claude/settings.json` — auto-trusts it via `enabledMcpjsonServers: ["wandb"]`.
+
+  Each developer only needs their own W&B API key in Claude Code's environment.
+  The easiest way is a personal, gitignored `.claude/settings.local.json`:
+
+  ```json
+  { "env": { "WANDB_API_KEY": "your-wandb-key" } }
+  ```
+
+  (Alternatively, set `WANDB_API_KEY` as an OS environment variable.) Then open
+  Claude Code in the repo root and run `/mcp` — `wandb` should show **connected**.
+
   Local development (without Docker)
 
   Backend
