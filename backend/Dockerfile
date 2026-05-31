@@ -1,8 +1,9 @@
+# syntax=docker/dockerfile:1
+
 FROM python:3.11-slim-bookworm
 
 WORKDIR /app
 
-# ffmpeg required by openai-whisper
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*

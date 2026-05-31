@@ -39,6 +39,7 @@ class Settings(BaseSettings):
     # Whisper
     whisper_model: str = "base"
     whisper_device: str = "cpu"
+    whisper_compute_type: str = "int8"
 
     @property
     def cors_origin_list(self) -> list[str]:

@@ -17,8 +17,8 @@ tavily-python>=0.5.0
 wandb>=0.18.0
 weave>=0.51.0
 
-# Transcription (CPU)
-openai-whisper>=20240930
+# Transcription (GPU via CTranslate2)
+faster-whisper>=1.0.0
 
 # Config
 pydantic-settings>=2.6.0

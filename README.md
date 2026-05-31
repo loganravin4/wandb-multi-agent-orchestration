@@ -1,128 +1,121 @@
-# wandb-multi-agent-orchestration
+  # LoopPrep — Multi-Agent Interview Coach
 
-Multi-agent interview prep powered by LangGraph, with W&B Weave tracing and session metrics.
+  Paste a job description. Speak your answers out loud. Get a calibrated mock interview built around how that company actually interviews — with per-question content and delivery
+  scoring, traced live in W&B Weave.
 
-## Tech stack
+  Built at AGI House x W&B Build Day, May 31 2026.
 
-| Layer | Tool |
-|---|---|
-| Agent orchestration | LangGraph |
-| Backend API | FastAPI + Uvicorn |
-| Inference client | `openai` SDK (W&B Serverless Inference endpoint) |
-| LLM | W&B Serverless Inference (Llama 3.1/3.3, DeepSeek-V3) |
-| Transcription | Whisper local (`openai-whisper`, base model, CPU) |
-| LLM tracing + eval | W&B Weave |
-| Session metrics | W&B Core |
-| Research | Tavily |
-| Frontend | React + Vite (Node 20) |
-| Containerization | Docker + Docker Compose |
-| Backend runtime | Python 3.11 |
+  ## Tech stack
+  
+  | Layer | Tool |
+  |---|---|
+  | Agent orchestration | LangGraph |
+  | Backend API | FastAPI + Uvicorn |
+  | Inference client | openai SDK (W&B Serverless Inference endpoint) |
+  | LLM | W&B Serverless Inference — see agent model breakdown below |
+  | Transcription | Whisper local (`openai-whisper`, base model, CPU) |
+  | LLM tracing + eval | W&B Weave |
+  | Session metrics | W&B Core |
+  | Research | Tavily |
+  | Frontend | React + Vite (Node 20) |
+  | Containerization | Docker + Docker Compose |
+  | Backend runtime | Python 3.11 |
 
-## Project layout
+  ## Agents
+  
+  | Agent | Model | Job |
+  |---|---|---|
+  | JD Parser | `meta-llama/Llama-3.1-8B-Instruct` | Extracts technical + behavioral signals from the JD |
+  | Research Agent | `meta-llama/Llama-3.3-70B-Instruct` | Looks up how the target company actually interviews |
+  | Format Agent | `meta-llama/Llama-3.3-70B-Instruct` | Builds the ordered question queue |
+  | Interviewer Agent | `meta-llama/Llama-3.3-70B-Instruct` | Runs the session, scores content per answer |
+  | Delivery Agent | `meta-llama/Llama-3.1-8B-Instruct` | Scores communication from Whisper transcript |
+  | Report Agent | `deepseek-ai/DeepSeek-V3-0324` | Generates final session debrief |
 
-```
-backend/
-  app/
-    agents/       # LangGraph graph + node implementations
-    routers/      # FastAPI routes
-    services/     # LLM, Whisper, Tavily clients
-    config.py     # pydantic-settings
-    main.py       # FastAPI entrypoint
-    observability.py
-    state.py
-  Dockerfile
-  requirements.txt
-frontend/
-  src/
-    api/          # typed fetch client
-    App.tsx
-  Dockerfile
-docker-compose.yml
-.env.example
-```
+  ## Project layout
 
-## Quick start (Docker — Mac + Windows)
+  backend/
+    app/
+      agents/       # LangGraph graph + node implementations
+      routers/      # FastAPI routes
+      services/     # LLM, Whisper, Tavily clients
+      config.py     # pydantic-settings
+      main.py       # FastAPI entrypoint
+      observability.py
+      state.py
+    Dockerfile
+    requirements.txt
+  frontend/
+    src/
+      api/          # typed fetch client
+      App.tsx
+    Dockerfile
+  docker-compose.yml
+  .env.example
 
-1. Copy env template and fill in API keys:
+  ## Quick start (Docker — Mac + Windows)
+  
+  1. Copy env template and fill in API keys:
+     ```bash
+     cp .env.example .env
 
-   ```bash
-   cp .env.example .env
-   ```
+  2. Start backend + production frontend:
+  docker compose up --build
+    - Frontend: http://localhost:5173
+    - Backend API: http://localhost:8000
+    - API docs: http://localhost:8000/docs
+  3. Dev mode with Vite hot reload:
+  docker compose --profile dev up --build
 
-2. Start backend + production frontend:
+  Local development (without Docker)
 
-   ```bash
-   docker compose up --build
-   ```
+  Backend
+  
+  cd backend
+  python -m venv .venv
+  source .venv/bin/activate        # Mac/Linux
+  # .venv\Scripts\Activate.ps1    # Windows PowerShell
+  pip install -r requirements.txt
+  cp ../.env.example .env
+  uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
-   - Frontend: http://localhost:5173
-   - Backend API: http://localhost:8000
-   - API docs: http://localhost:8000/docs
+  Frontend
 
-3. **Dev mode** with Vite hot reload:
+  cd frontend
+  npm install
+  npm run dev
+  Vite proxies /api → http://127.0.0.1:8000 (see vite.config.ts).
 
-   ```bash
-   docker compose --profile dev up --build
-   ```
+  API overview
 
-## Local development (without Docker)
+  | Method | Path | Description |
+  |--------|------|-------------|
+  | `GET` | `/api/health` | Liveness check |
+  | `GET` | `/api/ready` | Readiness check |
+  | `POST` | `/api/sessions` | Create session (runs ingest pipeline) |
+  | `GET` | `/api/sessions/{id}` | Get session state |
+  | `POST` | `/api/sessions/{id}/transcribe` | Upload audio → Whisper transcript |
+  | `POST` | `/api/sessions/{id}/hint` | Trigger Socratic hint path |
+  | `GET` | `/api/sessions/{id}/report` | Get final report, close W&B run |
 
-### Backend
+  
+  Agent graph
 
-```bash
-cd backend
-python -m venv .venv
+  START → jd_parser → [research ‖ format] → interviewer_loop → report → END
 
-# Mac / Linux
-source .venv/bin/activate
-# Windows PowerShell
-.venv\Scripts\Activate.ps1
+  Interviewer loop: present question → record audio → transcribe → score content + delivery → advance queue.
 
-pip install -r requirements.txt
-cp ../.env.example .env   # edit with your keys
+  Environment variables
+  
+  See .env.example. All four required before the backend will start:
 
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
+  - WANDB_API_KEY
+  - WANDB_ENTITY
+  - WANDB_PROJECT
+  - TAVILY_API_KEY
+  
+  Cross-platform notes
 
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Vite proxies `/api` → `http://127.0.0.1:8000` (see `vite.config.ts`).
-
-## API overview
-
-| Method | Path | Description |
-|---|---|---|
-| GET | `/api/health` | Liveness check |
-| GET | `/api/ready` | Readiness check |
-| POST | `/api/sessions` | Create session (runs research → format agents) |
-| GET | `/api/sessions/{id}` | Get session state |
-| POST | `/api/sessions/{id}/transcribe` | Upload audio → Whisper transcript |
-
-## Agent graph (current)
-
-```
-START → research (Tavily + Claude) → format (question queue) → END
-```
-
-Interview loop, scoring, and report nodes are stubbed for you to build next.
-
-## Cross-platform notes
-
-- **Paths**: temp audio files use `tempfile` (not hard-coded `/tmp`).
-- **Docker volumes**: named volume for `node_modules` avoids Mac/Windows bind-mount perf issues in dev profile.
-- **Line endings**: repo uses LF; Git on Windows should use `core.autocrlf=true` (default).
-
-## Environment variables
-
-See [`.env.example`](.env.example). All four are required before the backend will start:
-
-- `WANDB_API_KEY` (also authenticates W&B Serverless Inference — no Anthropic key needed)
-- `WANDB_ENTITY`
-- `WANDB_PROJECT`
-- `TAVILY_API_KEY`
+  - Paths: temp audio files use tempfile (not hard-coded /tmp).
+  - Docker volumes: named volume for node_modules avoids Mac/Windows bind-mount perf issues in dev profile.
+  - Line endings: repo uses LF; Git on Windows should use core.autocrlf=true (default).
