@@ -38,12 +38,13 @@ export type AnswerPayload = {
 
 export type AnswerResponse = {
   content_score: number;
-  delivery_score: number;
-  wpm: number;
-  filler_rate: number;
+  delivery_score: number | null;
+  wpm: number | null;
+  filler_rate: number | null;
   feedback: string;
   next_question: Question | null;
   session_complete: boolean;
+  is_coding: boolean;
 };
 
 export type ReportResponse = {

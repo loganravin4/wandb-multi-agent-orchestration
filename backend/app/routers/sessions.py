@@ -62,12 +62,13 @@ class AnswerRequest(BaseModel):
 
 class AnswerResponse(BaseModel):
     content_score: float
-    delivery_score: float
-    wpm: float
-    filler_rate: float
+    delivery_score: float | None
+    wpm: float | None
+    filler_rate: float | None
     feedback: str
     next_question: dict[str, Any] | None
     session_complete: bool
+    is_coding: bool = False
 
 
 class HintRequest(BaseModel):
@@ -178,11 +179,18 @@ async def submit_answer(session_id: str, body: AnswerRequest) -> AnswerResponse:
 
     question = questions[body.question_index]
 
-    # Run content eval and delivery eval in parallel
-    content_result, delivery_result = await asyncio.gather(
-        _run(evaluate_content, question, body.transcript),
-        _run(evaluate_delivery, body.transcript, body.duration_seconds),
-    )
+    is_coding = question["type"] == "coding"
+
+    if is_coding:
+        # Delivery scoring is meaningless for code — skip it
+        content_result = await _run(evaluate_content, question, body.transcript)
+        delivery_result = {"delivery_score": None, "wpm": None, "filler_rate": None}
+    else:
+        # Run content eval and delivery eval in parallel for spoken answers
+        content_result, delivery_result = await asyncio.gather(
+            _run(evaluate_content, question, body.transcript),
+            _run(evaluate_delivery, body.transcript, body.duration_seconds),
+        )
 
     # Build and store QuestionResult
     result: QuestionResult = {
@@ -197,6 +205,7 @@ async def submit_answer(session_id: str, body: AnswerRequest) -> AnswerResponse:
         "filler_rate": delivery_result["filler_rate"],
         "hint_used": state.get("hint_used", False),
         "feedback": content_result["feedback"],
+        "is_coding": is_coding,
     }
 
     # Reset so a hint used on this question doesn't carry over to the next one.
