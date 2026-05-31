@@ -24,7 +24,8 @@ def research_node(state: SessionState) -> SessionState:
         for r in results
     )
 
-    text = complete(
+    llm = get_llm("default")
+    response = llm.invoke(
         [
             {
                 "role": "system",

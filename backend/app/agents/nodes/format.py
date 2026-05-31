@@ -16,7 +16,8 @@ from app.state import Question, SessionState
 @weave.op()
 def format_node(state: SessionState) -> SessionState:
     """Generate an ordered question queue from research context."""
-    raw = complete(
+    llm = get_llm("default")
+    response = llm.invoke(
         [
             {
                 "role": "system",
