@@ -34,6 +34,7 @@ class SessionState(TypedDict, total=False):
     company: str
     role: str
     seniority: str
+    jd_parsed: dict
     interview_format: str
     common_topics: list[str]
     questions: list[Question]

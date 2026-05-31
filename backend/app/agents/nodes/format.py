@@ -1,10 +1,11 @@
-"""Format agent node — builds the question queue."""
+"""Format agent node — builds the ordered question queue."""
 
 from __future__ import annotations
 
 import json
 import re
 
+import weave
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from app.observability import log_question_queue_artifact, publish_question_dataset
@@ -12,24 +13,27 @@ from app.services.llm import get_llm
 from app.state import Question, SessionState
 
 
+@weave.op()
 def format_node(state: SessionState) -> SessionState:
-    """Generate an ordered question queue from research context."""
+    """Generate an ordered question queue from JD + research context."""
     llm = get_llm("default")
     response = llm.invoke(
         [
             SystemMessage(
                 content=(
-                    "Generate exactly 3 mock interview questions as JSON array. "
-                    'Each item: {"index": int, "type": "coding"|"behavioral"|"system_design", '
+                    "Generate exactly 3 mock interview questions as a JSON array. "
+                    'Each item must have: {"index": int, "type": "coding"|"behavioral"|"system_design", '
                     '"text": str, "difficulty": "easy"|"medium"|"hard"}. '
-                    "Return only valid JSON."
+                    "Return only valid JSON with no markdown fences."
                 )
             ),
             HumanMessage(
                 content=(
-                    f"Format: {state.get('interview_format', '')}\n"
-                    f"Topics: {state.get('common_topics', [])}\n"
-                    f"Role: {state.get('role', '')} at {state.get('company', '')}"
+                    f"Interview format: {state.get('interview_format', '')}\n"
+                    f"Common topics: {state.get('common_topics', [])}\n"
+                    f"Role: {state.get('role', '')} at {state.get('company', '')}\n"
+                    f"Seniority: {state.get('seniority', '')}\n"
+                    f"JD excerpt: {state.get('job_description', '')[:800]}"
                 )
             ),
         ]

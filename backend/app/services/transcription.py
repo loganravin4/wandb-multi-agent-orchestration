@@ -18,7 +18,9 @@ def _load_model() -> WhisperModel:
     )
 
 
-def transcribe_audio(audio_path: str | Path) -> str:
+def transcribe_audio(audio_path: str | Path) -> tuple[str, float]:
+    """Returns (transcript, duration_seconds)."""
     model = _load_model()
-    segments, _ = model.transcribe(str(audio_path))
-    return " ".join(segment.text for segment in segments).strip()
+    segments, info = model.transcribe(str(audio_path))
+    transcript = " ".join(segment.text for segment in segments).strip()
+    return transcript, info.duration
