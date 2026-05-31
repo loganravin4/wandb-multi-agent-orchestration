@@ -355,31 +355,37 @@ export default function Interview({ sessionId, questions, onComplete }: Props) {
 
         {phase === "scored" && scores && (
           <>
-            <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className={`grid gap-3 mb-4 ${scores.is_coding ? "grid-cols-1" : "grid-cols-2"}`}>
               <ScoreTile
                 label="content"
                 value={scores.content_score.toFixed(1)}
                 suffix="/10"
                 colorClass={scoreColorClass(scores.content_score)}
               />
-              <ScoreTile
-                label="delivery"
-                value={scores.delivery_score.toFixed(1)}
-                suffix="/10"
-                colorClass={scoreColorClass(scores.delivery_score)}
-              />
-              <ScoreTile
-                label="wpm"
-                value={scores.wpm.toFixed(0)}
-                suffix=""
-                colorClass="text-[#8899aa]"
-              />
-              <ScoreTile
-                label="fillers"
-                value={(scores.filler_rate * 100).toFixed(1)}
-                suffix="%"
-                colorClass={scores.filler_rate > 0.1 ? "text-[#ff4560]" : "text-[#00ff87]"}
-              />
+              {!scores.is_coding && scores.delivery_score != null && (
+                <ScoreTile
+                  label="delivery"
+                  value={scores.delivery_score.toFixed(1)}
+                  suffix="/10"
+                  colorClass={scoreColorClass(scores.delivery_score)}
+                />
+              )}
+              {!scores.is_coding && scores.wpm != null && (
+                <ScoreTile
+                  label="wpm"
+                  value={scores.wpm.toFixed(0)}
+                  suffix=""
+                  colorClass="text-[#8899aa]"
+                />
+              )}
+              {!scores.is_coding && scores.filler_rate != null && (
+                <ScoreTile
+                  label="fillers"
+                  value={(scores.filler_rate * 100).toFixed(1)}
+                  suffix="%"
+                  colorClass={scores.filler_rate > 0.1 ? "text-[#ff4560]" : "text-[#00ff87]"}
+                />
+              )}
             </div>
 
             <div className="mt-1">

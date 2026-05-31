@@ -139,7 +139,6 @@ export default function CodingIDE({ sessionId, question, questionIndex, totalQue
 
               <div className="flex gap-3">
                 <ScoreTile label="content" value={scores.content_score} />
-                <ScoreTile label="delivery" value={scores.delivery_score} />
               </div>
 
               <div className="border-l-2 border-[#00e5ff] pl-4 py-1">
@@ -319,10 +318,12 @@ function Badge({ label, color }: { label: string; color: string }) {
   );
 }
 
-function ScoreTile({ label, value }: { label: string; value: number }) {
+function ScoreTile({ label, value }: { label: string; value: number | null }) {
   return (
     <div className="bg-[#0d1520] border border-[#1e2d3d] rounded-sm p-2 text-center">
-      <span className={`font-mono text-xl font-bold ${scoreColor(value)}`}>{value.toFixed(1)}</span>
+      <span className={`font-mono text-xl font-bold ${value != null ? scoreColor(value) : "text-[#445566]"}`}>
+        {value != null ? value.toFixed(1) : "—"}
+      </span>
       <span className="font-mono text-xs text-[#445566] ml-0.5">/10</span>
       <div className="font-mono text-xs text-[#445566] uppercase tracking-widest mt-0.5">{label}</div>
     </div>
