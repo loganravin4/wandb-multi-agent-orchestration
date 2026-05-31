@@ -14,7 +14,7 @@ from app.state import Question, SessionState
 
 def format_node(state: SessionState) -> SessionState:
     """Generate an ordered question queue from research context."""
-    llm = get_llm()
+    llm = get_llm("default")
     response = llm.invoke(
         [
             SystemMessage(

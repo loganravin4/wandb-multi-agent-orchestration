@@ -22,7 +22,7 @@ def research_node(state: SessionState) -> SessionState:
         for r in results
     )
 
-    llm = get_llm()
+    llm = get_llm("default")
     response = llm.invoke(
         [
             SystemMessage(

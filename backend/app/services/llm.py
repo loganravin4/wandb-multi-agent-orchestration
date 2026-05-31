@@ -1,18 +1,29 @@
-"""Anthropic Claude LLM client."""
+"""W&B Serverless Inference LLM client (OpenAI-compatible API)."""
 
-from functools import lru_cache
+from __future__ import annotations
 
-from langchain_anthropic import ChatAnthropic
+from langchain_openai import ChatOpenAI
 
 from app.config import get_settings
 
+_WB_BASE_URL = "https://api.inference.wandb.ai/v1"
 
-@lru_cache
-def get_llm() -> ChatAnthropic:
+# Per CLAUDE.md agent assignments
+MODELS = {
+    "fast": "meta-llama/Llama-3.1-8B-Instruct",       # JD Parser, Delivery Agent
+    "default": "meta-llama/Llama-3.3-70B-Instruct",   # Research, Format, Interviewer
+    "synthesis": "deepseek-ai/DeepSeek-V3-0324",       # Report Agent
+}
+
+
+def get_llm(size: str = "default") -> ChatOpenAI:
+    """Return a LangChain ChatOpenAI pointed at W&B Serverless Inference."""
     settings = get_settings()
-    return ChatAnthropic(
-        model=settings.anthropic_model,
-        api_key=settings.anthropic_api_key,
+    model_id = MODELS.get(size, size)
+    return ChatOpenAI(
+        model=model_id,
+        base_url=_WB_BASE_URL,
+        api_key=settings.wandb_api_key,
         temperature=0.7,
         max_tokens=4096,
     )
