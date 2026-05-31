@@ -1,4 +1,4 @@
-"""Research agent node — Tavily + Claude."""
+"""Research agent node — Tavily + LLM."""
 
 from __future__ import annotations
 

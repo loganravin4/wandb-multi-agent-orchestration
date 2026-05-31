@@ -9,9 +9,10 @@ services:
       - .env
     environment:
       WANDB_PROJECT: ${WANDB_PROJECT:-loopprep}
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
       # Bind-mount for hot reload during local dev (works on Mac + Windows)
-      - ./backend/app:/app/app:ro
+      - ./backend/app:/app/app
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')"]
       interval: 10s

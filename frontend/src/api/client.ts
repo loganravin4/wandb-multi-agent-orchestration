@@ -2,7 +2,7 @@ const API_BASE = import.meta.env.VITE_API_BASE ?? "/api";
 
 export type Question = {
   index: number;
-  type: "coding" | "behavioral" | "system_design";
+  type: "coding" | "behavioral" | "system_design" | "technical";
   text: string;
   difficulty: "easy" | "medium" | "hard";
 };
@@ -20,14 +20,30 @@ export type CreateSessionResponse = {
   questions: Question[];
 };
 
-export type SessionResponse = {
-  session_id: string;
-  phase: string;
-  current_question: Question | null;
-  questions: Question[];
-  results: unknown[];
-  report: Record<string, unknown> | null;
-  error: string | null;
+export type AnswerPayload = {
+  transcript: string;
+  duration_seconds: number;
+  question_index: number;
+};
+
+export type AnswerResponse = {
+  content_score: number;
+  delivery_score: number;
+  wpm: number;
+  filler_rate: number;
+  feedback: string;
+  next_question: Question | null;
+  session_complete: boolean;
+};
+
+export type ReportResponse = {
+  summary: string;
+  strengths: string[];
+  areas_to_improve: string[];
+  next_steps: string[];
+  avg_content_score: number;
+  avg_delivery_score: number;
+  avg_overall: number;
 };
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -55,10 +71,6 @@ export async function createSession(
   });
 }
 
-export async function getSession(sessionId: string): Promise<SessionResponse> {
-  return request(`/sessions/${sessionId}`);
-}
-
 export async function transcribeAudio(
   sessionId: string,
   file: File,
@@ -69,8 +81,31 @@ export async function transcribeAudio(
     method: "POST",
     body: form,
   });
-  if (!res.ok) {
-    throw new Error(await res.text());
-  }
+  if (!res.ok) throw new Error(await res.text());
   return res.json();
+}
+
+export async function submitAnswer(
+  sessionId: string,
+  payload: AnswerPayload,
+): Promise<AnswerResponse> {
+  return request(`/sessions/${sessionId}/answer`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getHint(
+  sessionId: string,
+  questionIndex: number,
+  transcript: string,
+): Promise<{ hint: string }> {
+  return request(`/sessions/${sessionId}/hint`, {
+    method: "POST",
+    body: JSON.stringify({ question_index: questionIndex, transcript }),
+  });
+}
+
+export async function getReport(sessionId: string): Promise<ReportResponse> {
+  return request(`/sessions/${sessionId}/report`);
 }
