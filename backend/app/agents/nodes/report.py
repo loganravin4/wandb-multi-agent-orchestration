@@ -16,12 +16,9 @@ from app.state import QuestionResult
 def _score_question(output: dict, **kwargs) -> dict:
     """Per-question scorer for weave.Evaluation; ``output`` is one QuestionResult row."""
     content = output.get("content_score", 0)
-    delivery = output.get("delivery_score", 0)
-    return {
-        "content": content,
-        "delivery": delivery,
-        "overall": round((content + delivery) / 2, 2),
-    }
+    delivery = output.get("delivery_score")
+    overall = round((content + delivery) / 2, 2) if delivery is not None else content
+    return {"content": content, "delivery": delivery, "overall": overall}
 
 
 @weave.op()
@@ -31,13 +28,15 @@ def generate_report(results: list[QuestionResult], session_id: str) -> dict:
         return {"error": "no results to report"}
 
     avg_content = round(sum(r["content_score"] for r in results) / len(results), 2)
-    avg_delivery = round(sum(r["delivery_score"] for r in results) / len(results), 2)
-    avg_overall = round((avg_content + avg_delivery) / 2, 2)
+    spoken = [r for r in results if r.get("delivery_score") is not None]
+    avg_delivery = round(sum(r["delivery_score"] for r in spoken) / len(spoken), 2) if spoken else None
+    avg_overall = round((avg_content + avg_delivery) / 2, 2) if avg_delivery is not None else avg_content
 
     results_summary = "\n".join(
         f"Q{r['question_index'] + 1} ({r['question_type']}/{r.get('question_subtype', '')}): "
-        f"content={r['content_score']}/10, delivery={r['delivery_score']}/10 "
-        f"| {r.get('feedback', '')}"
+        f"content={r['content_score']}/10"
+        + (f", delivery={r['delivery_score']}/10" if r.get("delivery_score") is not None else " [code submission — no delivery score]")
+        + f" | {r.get('feedback', '')}"
         for r in results
     )
 
