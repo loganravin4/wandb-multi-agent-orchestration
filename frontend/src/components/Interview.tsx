@@ -164,13 +164,13 @@ export default function Interview({ sessionId, questions, onComplete }: Props) {
         question={currentQuestion}
         questionIndex={questionIndex}
         totalQuestions={questions.length}
-        onScored={async (result) => {
+        onNext={async (result) => {
           if (result.session_complete) {
             try {
               const report = await getReport(sessionId);
               onComplete(report);
             } catch {
-              // report not ready yet — Interview will show next question
+              setError("Report not ready — try again.");
             }
           } else {
             nextQuestion();

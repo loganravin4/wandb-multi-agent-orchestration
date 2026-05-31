@@ -9,28 +9,26 @@ import {
   submitAnswer,
 } from "../api/client";
 
-const STARTER = `def solution():
-    # Write your solution here
-    pass
-
-
-# Test your solution
-print(solution())
-`;
+function buildStarter(question: Question): string {
+  if (question.function_signature) {
+    return `${question.function_signature}\n    # Write your solution here\n    pass\n\n\n# Test your solution\n`;
+  }
+  return `def solution():\n    # Write your solution here\n    pass\n\n\n# Test your solution\nprint(solution())\n`;
+}
 
 interface Props {
   sessionId: string;
   question: Question;
   questionIndex: number;
   totalQuestions: number;
-  onScored: (result: AnswerResponse) => void;
+  onNext: (result: AnswerResponse) => void;
 }
 
 type RunState = "idle" | "running" | "done";
 type SubmitState = "idle" | "submitting" | "scored";
 
-export default function CodingIDE({ sessionId, question, questionIndex, totalQuestions, onScored }: Props) {
-  const [code, setCode] = useState(STARTER);
+export default function CodingIDE({ sessionId, question, questionIndex, totalQuestions, onNext }: Props) {
+  const [code, setCode] = useState(() => buildStarter(question));
   const [runState, setRunState] = useState<RunState>("idle");
   const [output, setOutput] = useState<{ stdout: string; stderr: string; exit_code: number; timed_out: boolean } | null>(null);
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
@@ -58,8 +56,8 @@ export default function CodingIDE({ sessionId, question, questionIndex, totalQue
     setError(null);
 
     const outputSection = output
-      ? `\n\n# --- Output ---\n${output.stdout || ""}${output.stderr ? `# stderr: ${output.stderr}` : ""}`
-      : "";
+      ? `\n\n# --- Run Output ---\n${output.stdout || ""}${output.stderr ? `# stderr:\n${output.stderr}` : ""}`
+      : "\n\n# --- Not run before submission ---";
     const transcript = `${code}${outputSection}`;
     const duration = (Date.now() - startRef.current) / 1000;
 
@@ -71,7 +69,6 @@ export default function CodingIDE({ sessionId, question, questionIndex, totalQue
       });
       setScores(result);
       setSubmitState("scored");
-      onScored(result);
     } catch {
       setError("Submit failed — try again.");
       setSubmitState("idle");
@@ -107,91 +104,144 @@ export default function CodingIDE({ sessionId, question, questionIndex, totalQue
           </span>
         </div>
         <div className="flex items-center gap-3">
-          {submitState === "scored" && scores && (
-            <div className="flex gap-3">
-              <span className="font-mono text-xs">
-                <span className="text-[#445566]">content </span>
-                <span className={scoreColor(scores.content_score)}>{scores.content_score.toFixed(1)}</span>
-                <span className="text-[#445566]">/10</span>
-              </span>
-              <span className="font-mono text-xs">
-                <span className="text-[#445566]">delivery </span>
-                <span className={scoreColor(scores.delivery_score)}>{scores.delivery_score.toFixed(1)}</span>
-                <span className="text-[#445566]">/10</span>
-              </span>
-            </div>
-          )}
-          {submitState !== "scored" && (
-            <button
-              onClick={handleSubmit}
-              disabled={submitState === "submitting"}
-              className={`font-mono text-xs uppercase tracking-widest px-4 py-1.5 rounded-sm border transition-colors ${
-                submitState === "submitting"
-                  ? "border-[#445566] text-[#445566] cursor-not-allowed"
-                  : "border-[#00ff87] text-[#00ff87] hover:bg-[#00ff87]/10"
-              }`}
-            >
-              {submitState === "submitting" ? "scoring…" : "submit"}
-            </button>
-          )}
+          <button
+            onClick={handleSubmit}
+            disabled={submitState !== "idle"}
+            className={`font-mono text-xs uppercase tracking-widest px-4 py-1.5 rounded-sm border transition-colors ${
+              submitState === "submitting"
+                ? "border-[#445566] text-[#445566] cursor-not-allowed"
+                : submitState === "scored"
+                ? "border-[#1e2d3d] text-[#1e2d3d] cursor-not-allowed"
+                : "border-[#00ff87] text-[#00ff87] hover:bg-[#00ff87]/10"
+            }`}
+          >
+            {submitState === "submitting" ? "scoring…" : submitState === "scored" ? "submitted ✓" : "submit"}
+          </button>
         </div>
       </div>
 
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left panel — question */}
+        {/* Left panel — question info or results after submit */}
         <div className="w-2/5 border-r border-[#1e2d3d] overflow-y-auto p-6 flex flex-col gap-5">
-          {/* Badges */}
-          <div className="flex gap-2 flex-wrap">
-            <Badge label={question.type} color="#00e5ff" />
-            {question.subtype && <Badge label={question.subtype.replace(/_/g, " ")} color="#445566" />}
-            <Badge
-              label={question.difficulty}
-              color={question.difficulty === "hard" ? "#ff4560" : question.difficulty === "medium" ? "#ffb300" : "#445566"}
-            />
-          </div>
 
-          {/* Question text */}
-          <p className="font-mono text-sm leading-relaxed text-[#e8edf3] m-0 whitespace-pre-wrap">
-            {question.text}
-          </p>
+          {submitState === "scored" && scores ? (
+            /* ── Results view (replaces question when scored) ── */
+            <>
+              <div className="flex gap-2 flex-wrap">
+                <Badge label={question.type} color="#00e5ff" />
+                {question.subtype && <Badge label={question.subtype.replace(/_/g, " ")} color="#445566" />}
+                <Badge
+                  label={question.difficulty}
+                  color={question.difficulty === "hard" ? "#ff4560" : question.difficulty === "medium" ? "#ffb300" : "#00ff87"}
+                />
+              </div>
 
-          {/* Hint */}
-          {hint && (
-            <div className="border-l-2 border-[#ffb300] pl-4 py-2">
-              <span className="font-mono text-xs text-[#ffb300] block mb-1">&gt; hint</span>
-              <span className="font-sans text-sm text-[#8899aa] leading-relaxed">{hint}</span>
-            </div>
-          )}
-
-          <button
-            onClick={handleHint}
-            disabled={hintLoading}
-            className={`font-mono text-xs uppercase tracking-widest px-3 py-1.5 rounded-sm border w-fit transition-colors ${
-              hintLoading
-                ? "border-[#1e2d3d] text-[#445566] cursor-not-allowed"
-                : "border-[#ffb300] text-[#ffb300] hover:bg-[#ffb300]/10"
-            }`}
-          >
-            {hintLoading ? "…" : hint ? "another hint" : "get hint"}
-          </button>
-
-          {/* Scores panel (after submit) */}
-          {submitState === "scored" && scores && (
-            <div className="border border-[#1e2d3d] rounded-sm p-4 bg-[#111822]">
-              <p className="font-mono text-xs text-[#445566] uppercase tracking-widest mb-3">// feedback</p>
-              <div className="grid grid-cols-2 gap-2 mb-3">
+              <div className="flex gap-3">
                 <ScoreTile label="content" value={scores.content_score} />
                 <ScoreTile label="delivery" value={scores.delivery_score} />
-                <ScoreTile label="wpm" value={scores.wpm} unit="" fixed={0} dimColor />
-                <ScoreTile label="fillers" value={scores.filler_rate * 100} unit="%" fixed={1} dimColor={scores.filler_rate <= 0.1} />
               </div>
-              <p className="font-sans text-sm text-[#8899aa] leading-relaxed m-0">
-                <span className="font-mono text-[#00e5ff] mr-1">&gt;</span>
-                {scores.feedback}
-              </p>
-              {error && <p className="font-mono text-xs text-[#ff4560] mt-2">{error}</p>}
-            </div>
+
+              <div className="border-l-2 border-[#00e5ff] pl-4 py-1">
+                <p className="font-sans text-sm text-[#e8edf3] leading-relaxed m-0">
+                  {scores.feedback}
+                </p>
+              </div>
+
+              <button
+                onClick={() => onNext(scores)}
+                className="font-mono text-sm uppercase tracking-widest px-4 py-2.5 rounded-sm border border-[#00e5ff] text-[#00e5ff] hover:bg-[#00e5ff]/10 transition-colors w-full"
+              >
+                {scores.session_complete ? "view report →" : "next question →"}
+              </button>
+
+              {error && <p className="font-mono text-xs text-[#ff4560]">{error}</p>}
+            </>
+          ) : (
+            /* ── Question view ── */
+            <>
+              <div className="flex gap-2 flex-wrap">
+                <Badge label={question.type} color="#00e5ff" />
+                {question.subtype && <Badge label={question.subtype.replace(/_/g, " ")} color="#445566" />}
+                <Badge
+                  label={question.difficulty}
+                  color={question.difficulty === "hard" ? "#ff4560" : question.difficulty === "medium" ? "#ffb300" : "#00ff87"}
+                />
+              </div>
+
+              <div>
+                <p className="font-mono text-xs text-[#445566] uppercase tracking-widest mb-2">// description</p>
+                <p className="font-sans text-sm leading-relaxed text-[#e8edf3] m-0">{question.text}</p>
+              </div>
+
+              {question.function_signature && (
+                <div>
+                  <p className="font-mono text-xs text-[#445566] uppercase tracking-widest mb-2">// signature</p>
+                  <pre className="font-mono text-xs text-[#00e5ff] bg-[#0d1520] border border-[#1e2d3d] rounded-sm p-3 m-0 whitespace-pre-wrap">
+                    {question.function_signature}
+                  </pre>
+                </div>
+              )}
+
+              {question.examples && question.examples.length > 0 && (
+                <div>
+                  <p className="font-mono text-xs text-[#445566] uppercase tracking-widest mb-3">// examples</p>
+                  <div className="flex flex-col gap-3">
+                    {question.examples.map((ex, i) => (
+                      <div key={i} className="bg-[#0d1520] border border-[#1e2d3d] rounded-sm p-3">
+                        <p className="font-mono text-xs text-[#445566] mb-2">example {i + 1}</p>
+                        <div className="flex flex-col gap-1">
+                          <div>
+                            <span className="font-mono text-xs text-[#8899aa]">input:  </span>
+                            <span className="font-mono text-xs text-[#e8edf3]">{ex.input}</span>
+                          </div>
+                          <div>
+                            <span className="font-mono text-xs text-[#8899aa]">output: </span>
+                            <span className="font-mono text-xs text-[#00ff87]">{ex.output}</span>
+                          </div>
+                          {ex.explanation && (
+                            <p className="font-sans text-xs text-[#445566] mt-1 m-0">{ex.explanation}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {question.constraints && question.constraints.length > 0 && (
+                <div>
+                  <p className="font-mono text-xs text-[#445566] uppercase tracking-widest mb-2">// constraints</p>
+                  <ul className="m-0 p-0 list-none flex flex-col gap-1">
+                    {question.constraints.map((c, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="font-mono text-xs text-[#445566] shrink-0">•</span>
+                        <span className="font-mono text-xs text-[#8899aa]">{c}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {hint && (
+                <div className="border-l-2 border-[#ffb300] pl-4 py-2">
+                  <span className="font-mono text-xs text-[#ffb300] block mb-1">&gt; hint</span>
+                  <span className="font-sans text-sm text-[#8899aa] leading-relaxed">{hint}</span>
+                </div>
+              )}
+
+              <button
+                onClick={handleHint}
+                disabled={hintLoading}
+                className={`font-mono text-xs uppercase tracking-widest px-3 py-1.5 rounded-sm border w-fit transition-colors ${
+                  hintLoading
+                    ? "border-[#1e2d3d] text-[#445566] cursor-not-allowed"
+                    : "border-[#ffb300] text-[#ffb300] hover:bg-[#ffb300]/10"
+                }`}
+              >
+                {hintLoading ? "…" : hint ? "another hint" : "get hint"}
+              </button>
+            </>
           )}
         </div>
 
@@ -269,32 +319,18 @@ function Badge({ label, color }: { label: string; color: string }) {
   );
 }
 
-function ScoreTile({
-  label,
-  value,
-  unit = "/10",
-  fixed = 1,
-  dimColor = false,
-}: {
-  label: string;
-  value: number;
-  unit?: string;
-  fixed?: number;
-  dimColor?: boolean;
-}) {
-  const color = dimColor ? "text-[#8899aa]" : scoreColor(value, unit === "/10");
+function ScoreTile({ label, value }: { label: string; value: number }) {
   return (
     <div className="bg-[#0d1520] border border-[#1e2d3d] rounded-sm p-2 text-center">
-      <span className={`font-mono text-xl font-bold ${color}`}>{value.toFixed(fixed)}</span>
-      <span className="font-mono text-xs text-[#445566] ml-0.5">{unit}</span>
+      <span className={`font-mono text-xl font-bold ${scoreColor(value)}`}>{value.toFixed(1)}</span>
+      <span className="font-mono text-xs text-[#445566] ml-0.5">/10</span>
       <div className="font-mono text-xs text-[#445566] uppercase tracking-widest mt-0.5">{label}</div>
     </div>
   );
 }
 
-function scoreColor(value: number, tenScale = true): string {
-  const threshold = tenScale ? [7, 5] : [70, 50];
-  if (value >= threshold[0]) return "text-[#00ff87]";
-  if (value >= threshold[1]) return "text-[#ffb300]";
+function scoreColor(value: number): string {
+  if (value >= 7) return "text-[#00ff87]";
+  if (value >= 5) return "text-[#ffb300]";
   return "text-[#ff4560]";
 }
