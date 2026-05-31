@@ -151,104 +151,103 @@ export default function Interview({ sessionId, questions, onComplete }: Props) {
     setError(null);
   }
 
+  const btnBase =
+    "font-mono text-sm uppercase tracking-widest bg-transparent py-2 px-4 rounded-sm border transition-colors";
+
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h2 style={{ margin: 0 }}>Interview</h2>
-        <span style={{ color: "#64748b", fontSize: "0.9rem" }}>
-          {questionIndex + 1} / {questions.length}
+      {/* Header */}
+      <div className="flex justify-between items-center mb-5">
+        <span className="font-mono text-xs text-[#445566]">// interview</span>
+        <span className="font-mono text-xs text-[#445566]">
+          question {questionIndex + 1}/{questions.length}
         </span>
       </div>
 
       {/* Progress bar */}
-      <div style={{ height: 4, background: "#e2e8f0", borderRadius: 2, margin: "0.75rem 0" }}>
+      <div className="h-px bg-[#1e2d3d] mb-6">
         <div
+          className="h-full bg-[#00e5ff] transition-all duration-500"
           style={{
-            height: "100%",
-            borderRadius: 2,
-            background: "#2563eb",
             width: `${((questionIndex + (phase === "scored" ? 1 : 0)) / questions.length) * 100}%`,
-            transition: "width 0.4s ease",
           }}
         />
       </div>
 
-      {/* Question */}
-      <div className="card">
-        <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.75rem" }}>
+      {/* Question card */}
+      <div className="bg-[#111822] border-l-2 border-[#00e5ff] pl-5 pr-4 py-4 mb-4">
+        <div className="flex gap-3 mb-3">
           <Badge type={currentQuestion.type} />
           <Badge type={currentQuestion.difficulty} />
         </div>
-        <p style={{ margin: 0, fontSize: "1.05rem", fontWeight: 500, lineHeight: 1.6 }}>
+        <p className="font-mono text-[0.95rem] leading-relaxed text-[#e8edf3]">
           {currentQuestion.text}
         </p>
       </div>
 
-      {/* Hint */}
+      {/* Hint panel */}
       {hint && (
-        <div
-          className="card"
-          style={{ borderColor: "#fbbf24", background: "#fffbeb", marginTop: "0.75rem" }}
-        >
-          <strong style={{ color: "#92400e" }}>Hint</strong>
-          <p style={{ margin: "0.25rem 0 0", color: "#78350f" }}>{hint}</p>
+        <div className="border-l-2 border-[#ffb300] pl-4 py-2 mb-3">
+          <span className="font-mono text-xs text-[#ffb300] mr-2">&gt; hint:</span>
+          <span className="font-sans text-sm text-[#8899aa]">{hint}</span>
         </div>
       )}
 
-      {/* Action area */}
-      <div className="card" style={{ marginTop: "0.75rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-
-        {/* Mode toggle */}
+      {/* Action card */}
+      <div className="bg-[#111822] border border-[#1e2d3d] rounded-sm p-4">
+        {/* Mode toggle (preserved logic; not in design spec) */}
         {phase !== "scored" && (
-          <div style={{ display: "flex", gap: 0, alignSelf: "flex-start", borderRadius: 8, overflow: "hidden", border: "1px solid #e2e8f0" }}>
+          <div className="flex gap-2 mb-4">
             <button
               onClick={() => handleModeSwitch("voice")}
-              style={{
-                background: mode === "voice" ? "#2563eb" : "#f8fafc",
-                color: mode === "voice" ? "#fff" : "#64748b",
-                border: "none", borderRadius: 0,
-                padding: "0.4rem 0.9rem", fontSize: "0.85rem",
-                fontWeight: mode === "voice" ? 600 : 400,
-              }}
+              className={`font-mono text-xs uppercase tracking-widest px-3 py-1.5 rounded-sm border transition-colors ${
+                mode === "voice"
+                  ? "border-[#00e5ff] text-[#00e5ff] bg-[#00e5ff]/10"
+                  : "border-[#1e2d3d] text-[#445566] bg-transparent hover:text-[#8899aa]"
+              }`}
             >
-              🎙 Voice
+              voice
             </button>
             <button
               onClick={() => handleModeSwitch("text")}
-              style={{
-                background: mode === "text" ? "#2563eb" : "#f8fafc",
-                color: mode === "text" ? "#fff" : "#64748b",
-                border: "none", borderLeft: "1px solid #e2e8f0", borderRadius: 0,
-                padding: "0.4rem 0.9rem", fontSize: "0.85rem",
-                fontWeight: mode === "text" ? 600 : 400,
-              }}
+              className={`font-mono text-xs uppercase tracking-widest px-3 py-1.5 rounded-sm border transition-colors ${
+                mode === "text"
+                  ? "border-[#00e5ff] text-[#00e5ff] bg-[#00e5ff]/10"
+                  : "border-[#1e2d3d] text-[#445566] bg-transparent hover:text-[#8899aa]"
+              }`}
             >
-              ⌨️ Type
+              text
             </button>
           </div>
         )}
 
         {mode === "voice" && phase === "idle" && (
-          <button onClick={startRecording} style={{ background: "#16a34a", fontSize: "1rem", padding: "0.75rem" }}>
-            🎙 Start Recording
+          <button
+            onClick={startRecording}
+            className="font-mono text-sm uppercase tracking-widest border border-[#00ff87] text-[#00ff87] bg-transparent py-2.5 px-5 rounded-sm hover:bg-[#00ff87]/10 transition-colors"
+          >
+            ▶ start recording
           </button>
         )}
 
         {mode === "voice" && phase === "recording" && (
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-            <span style={{ color: "#dc2626", fontWeight: 700, fontSize: "1rem" }}>
-              ● Recording…
-            </span>
-            <button onClick={stopRecording} style={{ background: "#dc2626" }}>
-              Stop
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-sm text-[#ff4560]">▶ recording</span>
+            <span className="blink font-mono text-[#ff4560] text-lg leading-none">|</span>
+            <button
+              onClick={stopRecording}
+              className="font-mono text-sm uppercase tracking-widest border border-[#ff4560] text-[#ff4560] bg-transparent py-2 px-4 rounded-sm hover:bg-[#ff4560]/10 transition-colors ml-2"
+            >
+              stop
             </button>
           </div>
         )}
 
         {mode === "voice" && phase === "processing" && (
-          <p style={{ color: "#64748b", margin: 0 }}>Transcribing audio…</p>
+          <p className="font-mono text-sm text-[#445566] italic m-0">transcribing audio...</p>
         )}
 
+        {/* Text mode entry (preserved logic; not in design spec) */}
         {mode === "text" && phase === "idle" && (
           <>
             <textarea
@@ -256,22 +255,28 @@ export default function Interview({ sessionId, questions, onComplete }: Props) {
               onChange={(e) => setTypedAnswer(e.target.value)}
               placeholder="Type your answer here…"
               rows={6}
-              style={{
-                width: "100%", padding: "0.65rem 0.75rem", fontSize: "0.95rem",
-                lineHeight: 1.6, border: "1px solid #cbd5e1", borderRadius: 8,
-                resize: "vertical", fontFamily: "inherit", color: "#1e293b",
-                background: "#f8fafc", boxSizing: "border-box",
-              }}
+              className="w-full bg-[#0d1520] border border-[#1e2d3d] rounded-sm p-3 font-mono text-sm text-[#e8edf3] resize-y placeholder:text-[#445566] focus:outline-none focus:border-[#00e5ff] transition-colors"
             />
-            <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
+            <div className="flex gap-3 flex-wrap mt-4">
               <button
                 onClick={handleTextSubmitReview}
                 disabled={typedAnswer.trim().length === 0}
+                className={`${btnBase} border-[#00ff87] text-[#00ff87] ${
+                  typedAnswer.trim().length === 0
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-[#00ff87]/10"
+                }`}
               >
-                Review Answer
+                review answer
               </button>
-              <button onClick={handleHint} disabled={hintLoading} style={{ background: "#d97706" }}>
-                {hintLoading ? "…" : "💡 Get Hint"}
+              <button
+                onClick={handleHint}
+                disabled={hintLoading}
+                className={`${btnBase} border-[#ffb300] text-[#ffb300] ${
+                  hintLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-[#ffb300]/10"
+                }`}
+              >
+                {hintLoading ? "…" : "get hint"}
               </button>
             </div>
           </>
@@ -279,31 +284,43 @@ export default function Interview({ sessionId, questions, onComplete }: Props) {
 
         {(phase === "reviewing" || phase === "submitting") && (
           <>
-            <div>
-              <strong>Your answer:</strong>
-              <p style={{ margin: "0.4rem 0 0", color: "#475569", lineHeight: 1.6 }}>
+            <div className="mb-4">
+              <p className="font-mono text-xs text-[#445566] uppercase tracking-widest mb-2">
+                your answer
+              </p>
+              <p className="font-mono text-sm text-[#8899aa] leading-relaxed border-l-2 border-[#1e2d3d] pl-3 m-0">
                 {transcript || "(no speech detected)"}
               </p>
             </div>
-            <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
-              <button onClick={handleSubmit} disabled={phase === "submitting"}>
-                {phase === "submitting" ? "Scoring…" : "Submit Answer"}
+            <div className="flex gap-3 flex-wrap mt-4">
+              <button
+                onClick={handleSubmit}
+                disabled={phase === "submitting"}
+                className={`${btnBase} border-[#00ff87] text-[#00ff87] ${
+                  phase === "submitting"
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-[#00ff87]/10"
+                }`}
+              >
+                {phase === "submitting" ? "scoring…" : "submit answer"}
               </button>
               <button
                 onClick={handleHint}
                 disabled={hintLoading}
-                style={{ background: "#d97706" }}
+                className={`${btnBase} border-[#ffb300] text-[#ffb300] ${
+                  hintLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-[#ffb300]/10"
+                }`}
               >
-                {hintLoading ? "…" : "💡 Get Hint"}
+                {hintLoading ? "…" : "get hint"}
               </button>
               <button
                 onClick={() => {
                   setPhase("idle");
                   if (mode === "text") setTypedAnswer(transcript);
                 }}
-                style={{ background: "#64748b" }}
+                className={`${btnBase} border-[#445566] text-[#445566] hover:bg-[#445566]/10`}
               >
-                {mode === "voice" ? "Re-record" : "Edit Answer"}
+                {mode === "voice" ? "re-record" : "edit answer"}
               </button>
             </div>
           </>
@@ -311,26 +328,55 @@ export default function Interview({ sessionId, questions, onComplete }: Props) {
 
         {phase === "scored" && scores && (
           <>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.5rem" }}>
-              <ScoreTile label="Content" value={scores.content_score} suffix="/10" color={scoreColor(scores.content_score)} />
-              <ScoreTile label="Delivery" value={scores.delivery_score} suffix="/10" color={scoreColor(scores.delivery_score)} />
-              <ScoreTile label="WPM" value={scores.wpm} suffix="" decimals={0} color="#2563eb" />
-              <ScoreTile label="Fillers" value={scores.filler_rate * 100} suffix="%" color={scores.filler_rate > 0.1 ? "#dc2626" : "#16a34a"} />
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <ScoreTile
+                label="content"
+                value={scores.content_score.toFixed(1)}
+                suffix="/10"
+                colorClass={scoreColorClass(scores.content_score)}
+              />
+              <ScoreTile
+                label="delivery"
+                value={scores.delivery_score.toFixed(1)}
+                suffix="/10"
+                colorClass={scoreColorClass(scores.delivery_score)}
+              />
+              <ScoreTile
+                label="wpm"
+                value={scores.wpm.toFixed(0)}
+                suffix=""
+                colorClass="text-[#8899aa]"
+              />
+              <ScoreTile
+                label="fillers"
+                value={(scores.filler_rate * 100).toFixed(1)}
+                suffix="%"
+                colorClass={scores.filler_rate > 0.1 ? "text-[#ff4560]" : "text-[#00ff87]"}
+              />
             </div>
-            <div style={{ background: "#f1f5f9", borderRadius: 8, padding: "0.75rem" }}>
-              <strong>Feedback</strong>
-              <p style={{ margin: "0.3rem 0 0", color: "#475569", lineHeight: 1.6 }}>
+
+            <div className="mt-1">
+              <span className="font-mono text-xs text-[#00e5ff] mr-2 select-none">&gt; </span>
+              <span className="font-sans text-sm text-[#8899aa] leading-relaxed">
                 {scores.feedback}
-              </p>
+              </span>
             </div>
-            {reportLoading && <p style={{ color: "#64748b" }}>Generating report…</p>}
+
+            {reportLoading && (
+              <p className="font-mono text-xs text-[#445566] italic mt-3">generating report...</p>
+            )}
             {!reportLoading && questionIndex < questions.length - 1 && (
-              <button onClick={nextQuestion}>Next Question →</button>
+              <button
+                onClick={nextQuestion}
+                className={`${btnBase} mt-4 w-full border-[#00e5ff] text-[#00e5ff] hover:bg-[#00e5ff]/10`}
+              >
+                next question →
+              </button>
             )}
           </>
         )}
 
-        {error && <p className="error" style={{ margin: 0 }}>{error}</p>}
+        {error && <p className="font-mono text-xs text-[#ff4560] mt-3">{error}</p>}
       </div>
     </div>
   );
@@ -340,30 +386,20 @@ function ScoreTile({
   label,
   value,
   suffix,
-  color,
-  decimals = 1,
+  colorClass,
 }: {
   label: string;
-  value: number;
+  value: string;
   suffix: string;
-  color: string;
-  decimals?: number;
+  colorClass: string;
 }) {
   return (
-    <div
-      style={{
-        textAlign: "center",
-        background: "#f8fafc",
-        border: "1px solid #e2e8f0",
-        borderRadius: 8,
-        padding: "0.6rem 0.25rem",
-      }}
-    >
-      <div style={{ fontSize: "1.5rem", fontWeight: 700, color }}>
-        {value.toFixed(decimals)}
-        <span style={{ fontSize: "0.8rem" }}>{suffix}</span>
+    <div className="bg-[#0d1520] border border-[#1e2d3d] rounded-sm p-3 text-center">
+      <div>
+        <span className={`font-mono text-3xl font-bold ${colorClass}`}>{value}</span>
+        {suffix && <span className="font-mono text-xs text-[#445566] ml-0.5">{suffix}</span>}
       </div>
-      <div style={{ fontSize: "0.7rem", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+      <div className="font-mono text-xs text-[#445566] uppercase tracking-widest mt-1">
         {label}
       </div>
     </div>
@@ -371,35 +407,20 @@ function ScoreTile({
 }
 
 function Badge({ type }: { type: string }) {
-  const palette: Record<string, { bg: string; color: string }> = {
-    coding:        { bg: "#dbeafe", color: "#1e40af" },
-    behavioral:    { bg: "#dcfce7", color: "#166534" },
-    system_design: { bg: "#fef3c7", color: "#92400e" },
-    technical:     { bg: "#ede9fe", color: "#5b21b6" },
-    easy:          { bg: "#f0fdf4", color: "#15803d" },
-    medium:        { bg: "#fff7ed", color: "#c2410c" },
-    hard:          { bg: "#fef2f2", color: "#b91c1c" },
+  const colors: Record<string, string> = {
+    coding: "text-[#00e5ff]",
+    behavioral: "text-[#00ff87]",
+    system_design: "text-[#ffb300]",
+    easy: "text-[#445566]",
+    medium: "text-[#445566]",
+    hard: "text-[#445566]",
   };
-  const { bg, color } = palette[type] ?? { bg: "#f1f5f9", color: "#475569" };
-  return (
-    <span
-      style={{
-        background: bg,
-        color,
-        padding: "0.15rem 0.6rem",
-        borderRadius: 999,
-        fontSize: "0.75rem",
-        fontWeight: 600,
-        textTransform: "capitalize",
-      }}
-    >
-      {type.replace("_", " ")}
-    </span>
-  );
+  const color = colors[type] ?? "text-[#8899aa]";
+  return <span className={`font-mono text-xs tracking-wide ${color}`}>[{type}]</span>;
 }
 
-function scoreColor(value: number): string {
-  if (value >= 7.5) return "#16a34a";
-  if (value >= 5) return "#d97706";
-  return "#dc2626";
+function scoreColorClass(value: number): string {
+  if (value >= 7) return "text-[#00ff87]";
+  if (value >= 5) return "text-[#ffb300]";
+  return "text-[#ff4560]";
 }
