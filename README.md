@@ -88,23 +88,16 @@
 
   API overview
 
-  ┌────────┬───────────────────────────────┬───────────────────────────────────────┐
-  │ Method │             Path              │              Description              │
-  ├────────┼───────────────────────────────┼───────────────────────────────────────┤
-  │ GET    │ /api/health                   │ Liveness check                        │
-  ├────────┼───────────────────────────────┼───────────────────────────────────────┤
-  │ GET    │ /api/ready                    │ Readiness check                       │
-  ├────────┼───────────────────────────────┼───────────────────────────────────────┤
-  │ POST   │ /api/sessions                 │ Create session (runs ingest pipeline) │
-  ├────────┼───────────────────────────────┼───────────────────────────────────────┤
-  │ GET    │ /api/sessions/{id}            │ Get session state                     │
-  ├────────┼───────────────────────────────┼───────────────────────────────────────┤
-  │ POST   │ /api/sessions/{id}/transcribe │ Upload audio → Whisper transcript     │
-  ├────────┼───────────────────────────────┼───────────────────────────────────────┤
-  │ POST   │ /api/sessions/{id}/hint       │ Trigger Socratic hint path            │
-  ├────────┼───────────────────────────────┼───────────────────────────────────────┤
-  │ GET    │ /api/sessions/{id}/report     │ Get final report, close W&B run       │
-  └────────┴───────────────────────────────┴───────────────────────────────────────┘
+  | Method | Path | Description |
+  |--------|------|-------------|
+  | `GET` | `/api/health` | Liveness check |
+  | `GET` | `/api/ready` | Readiness check |
+  | `POST` | `/api/sessions` | Create session (runs ingest pipeline) |
+  | `GET` | `/api/sessions/{id}` | Get session state |
+  | `POST` | `/api/sessions/{id}/transcribe` | Upload audio → Whisper transcript |
+  | `POST` | `/api/sessions/{id}/hint` | Trigger Socratic hint path |
+  | `GET` | `/api/sessions/{id}/report` | Get final report, close W&B run |
+
   
   Agent graph
 
