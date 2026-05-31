@@ -33,6 +33,8 @@ export default function Interview({ sessionId, questions, onComplete }: Props) {
   const [hintLoading, setHintLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
+  const [mode, setMode] = useState<"voice" | "text">("voice");
+  const [typedAnswer, setTypedAnswer] = useState("");
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -82,6 +84,22 @@ export default function Interview({ sessionId, questions, onComplete }: Props) {
     mediaRecorderRef.current?.stop();
   }
 
+  function handleTextSubmitReview() {
+    setTranscript(typedAnswer);
+    setDuration(60);
+    setPhase("reviewing");
+  }
+
+  function handleModeSwitch(newMode: "voice" | "text") {
+    setMode(newMode);
+    if (phase !== "scored") {
+      setPhase("idle");
+      setTranscript("");
+      setTypedAnswer("");
+      setError(null);
+    }
+  }
+
   async function handleSubmit() {
     setPhase("submitting");
     setError(null);
@@ -127,6 +145,7 @@ export default function Interview({ sessionId, questions, onComplete }: Props) {
     setQuestionIndex((i) => i + 1);
     setPhase("idle");
     setTranscript("");
+    setTypedAnswer("");
     setScores(null);
     setHint(null);
     setError(null);
@@ -179,13 +198,43 @@ export default function Interview({ sessionId, questions, onComplete }: Props) {
       {/* Action area */}
       <div className="card" style={{ marginTop: "0.75rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
 
-        {phase === "idle" && (
+        {/* Mode toggle */}
+        {phase !== "scored" && (
+          <div style={{ display: "flex", gap: 0, alignSelf: "flex-start", borderRadius: 8, overflow: "hidden", border: "1px solid #e2e8f0" }}>
+            <button
+              onClick={() => handleModeSwitch("voice")}
+              style={{
+                background: mode === "voice" ? "#2563eb" : "#f8fafc",
+                color: mode === "voice" ? "#fff" : "#64748b",
+                border: "none", borderRadius: 0,
+                padding: "0.4rem 0.9rem", fontSize: "0.85rem",
+                fontWeight: mode === "voice" ? 600 : 400,
+              }}
+            >
+              🎙 Voice
+            </button>
+            <button
+              onClick={() => handleModeSwitch("text")}
+              style={{
+                background: mode === "text" ? "#2563eb" : "#f8fafc",
+                color: mode === "text" ? "#fff" : "#64748b",
+                border: "none", borderLeft: "1px solid #e2e8f0", borderRadius: 0,
+                padding: "0.4rem 0.9rem", fontSize: "0.85rem",
+                fontWeight: mode === "text" ? 600 : 400,
+              }}
+            >
+              ⌨️ Type
+            </button>
+          </div>
+        )}
+
+        {mode === "voice" && phase === "idle" && (
           <button onClick={startRecording} style={{ background: "#16a34a", fontSize: "1rem", padding: "0.75rem" }}>
             🎙 Start Recording
           </button>
         )}
 
-        {phase === "recording" && (
+        {mode === "voice" && phase === "recording" && (
           <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
             <span style={{ color: "#dc2626", fontWeight: 700, fontSize: "1rem" }}>
               ● Recording…
@@ -196,8 +245,36 @@ export default function Interview({ sessionId, questions, onComplete }: Props) {
           </div>
         )}
 
-        {phase === "processing" && (
+        {mode === "voice" && phase === "processing" && (
           <p style={{ color: "#64748b", margin: 0 }}>Transcribing audio…</p>
+        )}
+
+        {mode === "text" && phase === "idle" && (
+          <>
+            <textarea
+              value={typedAnswer}
+              onChange={(e) => setTypedAnswer(e.target.value)}
+              placeholder="Type your answer here…"
+              rows={6}
+              style={{
+                width: "100%", padding: "0.65rem 0.75rem", fontSize: "0.95rem",
+                lineHeight: 1.6, border: "1px solid #cbd5e1", borderRadius: 8,
+                resize: "vertical", fontFamily: "inherit", color: "#1e293b",
+                background: "#f8fafc", boxSizing: "border-box",
+              }}
+            />
+            <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
+              <button
+                onClick={handleTextSubmitReview}
+                disabled={typedAnswer.trim().length === 0}
+              >
+                Review Answer
+              </button>
+              <button onClick={handleHint} disabled={hintLoading} style={{ background: "#d97706" }}>
+                {hintLoading ? "…" : "💡 Get Hint"}
+              </button>
+            </div>
+          </>
         )}
 
         {(phase === "reviewing" || phase === "submitting") && (
@@ -219,8 +296,14 @@ export default function Interview({ sessionId, questions, onComplete }: Props) {
               >
                 {hintLoading ? "…" : "💡 Get Hint"}
               </button>
-              <button onClick={() => setPhase("idle")} style={{ background: "#64748b" }}>
-                Re-record
+              <button
+                onClick={() => {
+                  setPhase("idle");
+                  if (mode === "text") setTypedAnswer(transcript);
+                }}
+                style={{ background: "#64748b" }}
+              >
+                {mode === "voice" ? "Re-record" : "Edit Answer"}
               </button>
             </div>
           </>
