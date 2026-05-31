@@ -46,9 +46,8 @@ def research_node(state: SessionState) -> SessionState:
 
     log_research_metrics(interview_format, common_topics)
 
+    # Return only changed keys — LangGraph merges partial updates automatically
     return {
-        **state,
         "interview_format": interview_format,
         "common_topics": common_topics or ["general behavioral", "technical depth"],
-        "phase": "interview",
     }

@@ -45,4 +45,5 @@ def jd_parser_node(state: SessionState) -> SessionState:
     if parsed.get("seniority"):
         updates["seniority"] = parsed["seniority"]
 
-    return {**state, **updates}
+    # Return only changed keys — LangGraph merges partial updates automatically
+    return updates

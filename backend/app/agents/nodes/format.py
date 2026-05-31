@@ -51,8 +51,8 @@ def format_node(state: SessionState) -> SessionState:
 
     current = questions[0] if questions else None
 
+    # Return only changed keys — LangGraph merges partial updates automatically
     return {
-        **state,
         "questions": questions,
         "current_index": 0,
         "current_question": current,
