@@ -79,6 +79,17 @@ class HintResponse(BaseModel):
     hint: str
 
 
+class ExecuteRequest(BaseModel):
+    code: str = Field(..., max_length=50_000)
+
+
+class ExecuteResponse(BaseModel):
+    stdout: str
+    stderr: str
+    exit_code: int
+    timed_out: bool
+
+
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 def _get_session_or_404(session_id: str) -> SessionState:
@@ -177,6 +188,7 @@ async def submit_answer(session_id: str, body: AnswerRequest) -> AnswerResponse:
     result: QuestionResult = {
         "question_index": body.question_index,
         "question_type": question["type"],
+        "question_subtype": question.get("subtype", ""),
         "transcript": body.transcript,
         "duration_seconds": body.duration_seconds,
         "content_score": content_result["content_score"],
@@ -208,6 +220,7 @@ async def submit_answer(session_id: str, body: AnswerRequest) -> AnswerResponse:
     log_turn_metrics(
         question_index=body.question_index,
         question_type=question["type"],
+        question_subtype=question.get("subtype", ""),
         content_score=content_result["content_score"],
         delivery_score=delivery_result["delivery_score"],
         wpm=delivery_result["wpm"],
@@ -242,6 +255,14 @@ async def get_hint(session_id: str, body: HintRequest) -> HintResponse:
     _sessions[session_id] = state
 
     return HintResponse(hint=hint)
+
+
+@router.post("/{session_id}/execute", response_model=ExecuteResponse)
+async def execute_code(session_id: str, body: ExecuteRequest) -> ExecuteResponse:
+    _get_session_or_404(session_id)
+    from app.services.executor import run_python
+    result = await _run(run_python, body.code)
+    return ExecuteResponse(**result)
 
 
 @router.get("/{session_id}/report")

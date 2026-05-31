@@ -22,8 +22,14 @@ def format_node(state: SessionState) -> SessionState:
     response = llm.invoke([
         SystemMessage(content=(
             "Generate exactly 3 mock interview questions as a JSON array. "
-            'Each item: {"index": int, "type": "coding"|"behavioral"|"system_design", '
-            '"text": str, "difficulty": "easy"|"medium"|"hard"}. '
+            'Each item: {"index": int, "type": "coding"|"behavioral"|"system_design"|"brain_teaser", '
+            '"subtype": str, "text": str, "difficulty": "easy"|"medium"|"hard"}. '
+            "Choose subtype from these valid values per type:\n"
+            "  coding      → algorithms | data_structures | dynamic_programming | debugging | implementation\n"
+            "  system_design → distributed_systems | api_design | database_design | scalability | microservices\n"
+            "  behavioral  → leadership | conflict_resolution | ownership | collaboration | impact\n"
+            "  brain_teaser → logic_puzzle | estimation | lateral_thinking\n"
+            "Only include brain_teaser questions if the company is known for them (e.g. quant firms, Google, Jane Street). "
             "Calibrate question type mix and difficulty to the seniority level and tech stack. "
             "Make the questions specific to the role — reference actual technologies and responsibilities. "
             "Return only valid JSON."

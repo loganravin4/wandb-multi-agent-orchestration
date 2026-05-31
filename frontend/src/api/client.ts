@@ -2,7 +2,8 @@ const API_BASE = import.meta.env.VITE_API_BASE ?? "/api";
 
 export type Question = {
   index: number;
-  type: "coding" | "behavioral" | "system_design" | "technical";
+  type: "coding" | "behavioral" | "system_design" | "brain_teaser";
+  subtype: string;
   text: string;
   difficulty: "easy" | "medium" | "hard";
 };
@@ -103,6 +104,23 @@ export async function getHint(
   return request(`/sessions/${sessionId}/hint`, {
     method: "POST",
     body: JSON.stringify({ question_index: questionIndex, transcript }),
+  });
+}
+
+export type ExecuteResponse = {
+  stdout: string;
+  stderr: string;
+  exit_code: number;
+  timed_out: boolean;
+};
+
+export async function executeCode(
+  sessionId: string,
+  code: string,
+): Promise<ExecuteResponse> {
+  return request(`/sessions/${sessionId}/execute`, {
+    method: "POST",
+    body: JSON.stringify({ code }),
   });
 }
 

@@ -92,6 +92,7 @@ def log_question_queue_artifact(questions: list[Question], session_id: str) -> N
 def log_turn_metrics(
     question_index: int,
     question_type: str,
+    question_subtype: str = "",
     content_score: float | None = None,
     delivery_score: float | None = None,
     wpm: float | None = None,
@@ -106,6 +107,7 @@ def log_turn_metrics(
     metrics: dict[str, Any] = {
         "question_index": question_index,
         "question_type": question_type,
+        "question_subtype": question_subtype,
         "hint_used": int(hint_used),
     }
     if content_score is not None:

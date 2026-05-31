@@ -5,12 +5,24 @@ from __future__ import annotations
 from typing import Literal, TypedDict
 
 
-QuestionType = Literal["coding", "behavioral", "system_design"]
+QuestionType = Literal["coding", "behavioral", "system_design", "brain_teaser"]
+
+QuestionSubtype = Literal[
+    # coding
+    "algorithms", "data_structures", "dynamic_programming", "debugging", "implementation",
+    # system_design
+    "distributed_systems", "api_design", "database_design", "scalability", "microservices",
+    # behavioral
+    "leadership", "conflict_resolution", "ownership", "collaboration", "impact",
+    # brain_teaser
+    "logic_puzzle", "estimation", "lateral_thinking",
+]
 
 
 class Question(TypedDict):
     index: int
     type: QuestionType
+    subtype: QuestionSubtype
     text: str
     difficulty: Literal["easy", "medium", "hard"]
 
@@ -18,6 +30,7 @@ class Question(TypedDict):
 class QuestionResult(TypedDict):
     question_index: int
     question_type: QuestionType
+    question_subtype: str
     transcript: str
     duration_seconds: float
     content_score: float

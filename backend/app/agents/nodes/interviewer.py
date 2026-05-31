@@ -17,6 +17,9 @@ _CONTENT_SYSTEM = (
     "  coding      → correctness, approach, edge cases, time/space complexity\n"
     "  behavioral  → STAR completeness (Situation, Task, Action, Result)\n"
     "  system_design → breadth of components, tradeoffs discussed, clarity\n"
+    "  brain_teaser → logical reasoning, clarity of thought process, problem decomposition, creative approach\n"
+    "The subtype narrows what to emphasize (e.g. 'dynamic_programming' coding → focus on memoization/recurrence; "
+    "'estimation' brain_teaser → focus on structured assumptions and order-of-magnitude reasoning). "
     "Be direct and specific. "
     'Return only valid JSON: {"content_score": <float 0-10>, "feedback": "<2-3 sentences>"}'
 )
@@ -35,7 +38,7 @@ def evaluate_content(question: Question, transcript: str) -> dict:
     response = llm.invoke([
         SystemMessage(content=_CONTENT_SYSTEM),
         HumanMessage(content=(
-            f"Question type: {question['type']}\n"
+            f"Question type: {question['type']} / {question.get('subtype', '')}\n"
             f"Difficulty: {question['difficulty']}\n"
             f"Question: {question['text']}\n\n"
             f"Candidate answer: {transcript}"
