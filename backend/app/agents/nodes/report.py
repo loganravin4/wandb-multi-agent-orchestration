@@ -13,17 +13,14 @@ from app.state import QuestionResult
 
 
 @weave.op()
-def _score_question(
-    question_index: int,
-    content_score: float,
-    delivery_score: float,
-    **kwargs,
-) -> dict:
-    """Per-question scorer used inside weave.Evaluation."""
+def _score_question(output: dict, **kwargs) -> dict:
+    """Per-question scorer for weave.Evaluation; ``output`` is one QuestionResult row."""
+    content = output.get("content_score", 0)
+    delivery = output.get("delivery_score", 0)
     return {
-        "content": content_score,
-        "delivery": delivery_score,
-        "overall": round((content_score + delivery_score) / 2, 2),
+        "content": content,
+        "delivery": delivery,
+        "overall": round((content + delivery) / 2, 2),
     }
 
 
@@ -72,7 +69,12 @@ def generate_report(results: list[QuestionResult], session_id: str) -> dict:
         name=f"session-{session_id[:8]}",
         rows=[dict(r) for r in results],
     )
-    weave.Evaluation(dataset=dataset, scorers=[_score_question])
+    evaluation = weave.Evaluation(
+        name=f"session-eval-{session_id[:8]}",
+        dataset=dataset,
+        scorers=[_score_question],
+    )
+    weave.publish(evaluation)
 
     return {
         "summary": parsed.get("summary", ""),
