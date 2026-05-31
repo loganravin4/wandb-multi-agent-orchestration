@@ -17,10 +17,6 @@ class Settings(BaseSettings):
     api_port: int = 8000
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
-    # Anthropic
-    anthropic_api_key: str = ""
-    anthropic_model: str = "claude-sonnet-4-20250514"
-
     # Tavily
     tavily_api_key: str = ""
 
