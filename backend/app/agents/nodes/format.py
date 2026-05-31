@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 
+import weave
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from app.observability import log_question_queue_artifact, publish_question_dataset
@@ -12,6 +13,7 @@ from app.services.llm import get_llm
 from app.state import Question, SessionState
 
 
+@weave.op()
 def format_node(state: SessionState) -> SessionState:
     """Generate an ordered question queue from research context."""
     llm = get_llm("default")

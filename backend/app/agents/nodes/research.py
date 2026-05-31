@@ -1,7 +1,8 @@
-"""Research agent node — Tavily + Claude."""
+"""Research agent node — Tavily + LLM."""
 
 from __future__ import annotations
 
+import weave
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from app.observability import log_research_metrics
@@ -10,6 +11,7 @@ from app.services.research import search
 from app.state import SessionState
 
 
+@weave.op()
 def research_node(state: SessionState) -> SessionState:
     """Gather interview context via web research and summarize with the LLM."""
     company = state.get("company", "")
