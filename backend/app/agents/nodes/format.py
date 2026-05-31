@@ -36,9 +36,22 @@ def format_node(state: SessionState) -> SessionState:
             '  "examples": [{"input": str, "output": str, "explanation": str}, ...]  — exactly 2 examples\n'
             '     Use concrete values: input = "nums = [2,7,11,15], target = 9", output = "[0,1]"\n'
             '  "constraints": [str, ...]  — 3-5 constraints like "1 <= nums.length <= 10^4"\n\n'
+            "DOMAIN CALIBRATION — follow strictly:\n"
+            "  Quant/finance/trading/HFT roles: prefer numerical algorithms (Monte Carlo, pricing models, "
+            "    statistical arbitrage, order book structures), probability/stats problems, or "
+            "    latency-sensitive data structure design. NEVER ask generic HashMap/LinkedList/BFS/DFS "
+            "    implementations — these are CS101 and insult the role.\n"
+            "  ML/AI/data science roles: prefer model implementation, loss functions, data pipeline "
+            "    design, feature engineering logic, or ML system design.\n"
+            "  Backend/infrastructure roles: distributed systems, database internals, API design, "
+            "    concurrency problems.\n"
+            "  Senior/staff/principal: heavy system design and architectural tradeoffs. "
+            "    Fewer pure algorithm questions.\n"
+            "  Intern/new grad: algorithm problems appropriate to the domain — "
+            "    NOT generic CS101 for specialized roles.\n\n"
             "Only include brain_teaser if the company is known for them (quant firms, Google, Jane Street). "
-            "Calibrate type mix and difficulty to seniority and tech stack. "
-            "Make questions specific to the role. Return only valid JSON."
+            "A question that could apply to ANY software engineering role is a failure — make it specific. "
+            "Return only valid JSON."
         )),
         HumanMessage(content=(
             f"Role: {state.get('role', '')} at {state.get('company', '')}\n"
