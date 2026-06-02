@@ -1,26 +1,23 @@
 from __future__ import annotations
 
-from functools import lru_cache
 from pathlib import Path
 
 import weave
-from faster_whisper import WhisperModel
 
 from app.config import get_settings
 
 
-@lru_cache
-def _load_model() -> WhisperModel:
-    settings = get_settings()
-    return WhisperModel(
-        settings.whisper_model,
-        device=settings.whisper_device,
-        compute_type=settings.whisper_compute_type,
-    )
-
-
 @weave.op()
 def transcribe_audio(audio_path: str | Path) -> str:
-    model = _load_model()
-    segments, _ = model.transcribe(str(audio_path))
-    return " ".join(segment.text for segment in segments).strip()
+    from groq import Groq
+
+    settings = get_settings()
+    client = Groq(api_key=settings.groq_api_key)
+
+    with open(audio_path, "rb") as f:
+        transcription = client.audio.transcriptions.create(
+            file=(Path(audio_path).name, f),
+            model="whisper-large-v3-turbo",
+        )
+
+    return transcription.text.strip()

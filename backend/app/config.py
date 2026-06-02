@@ -38,22 +38,25 @@ class Settings(BaseSettings):
     wandb_project: str = "loopprep"
     wandb_entity: str = ""
 
-    # Whisper
-    whisper_model: str = "base"
-    whisper_device: str = "cpu"
-    whisper_compute_type: str = "int8"
+    # Groq (Whisper transcription)
+    groq_api_key: str = ""
+
+    # Upstash Redis (session persistence — optional, falls back to in-memory)
+    upstash_redis_url: str = ""
+    upstash_redis_token: str = ""
 
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
     def missing_required(self) -> list[str]:
-        """Names of required keys that are unset (PRD: all four needed to start)."""
+        """Names of required keys that are unset."""
         required = {
             "WANDB_API_KEY": self.wandb_api_key,
             "WANDB_ENTITY": self.wandb_entity,
             "WANDB_PROJECT": self.wandb_project,
             "TAVILY_API_KEY": self.tavily_api_key,
+            "GROQ_API_KEY": self.groq_api_key,
         }
         return [name for name, value in required.items() if not value]
 

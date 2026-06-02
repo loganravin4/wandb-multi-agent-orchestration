@@ -17,13 +17,11 @@ from app.agents.nodes.delivery import evaluate_delivery
 from app.agents.nodes.interviewer import evaluate_content, get_socratic_hint
 from app.agents.nodes.report import generate_report
 from app.observability import init_observability, log_final_metrics, log_turn_metrics
+from app.services.session_store import get_session, set_session
 from app.services.transcription import transcribe_audio
 from app.state import QuestionResult, SessionState
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
-
-# In-memory session store
-_sessions: dict[str, SessionState] = {}
 
 # Thread pool for running sync agent functions from async endpoints
 _executor = ThreadPoolExecutor(max_workers=8)
@@ -94,7 +92,7 @@ class ExecuteResponse(BaseModel):
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 def _get_session_or_404(session_id: str) -> SessionState:
-    state = _sessions.get(session_id)
+    state = get_session(session_id)
     if not state:
         raise HTTPException(status_code=404, detail="Session not found")
     return state
@@ -125,7 +123,7 @@ async def create_session(body: CreateSessionRequest) -> CreateSessionResponse:
 
     graph = get_graph()
     final = await _run(graph.invoke, initial)
-    _sessions[session_id] = final
+    set_session(session_id, final)
 
     return CreateSessionResponse(
         session_id=session_id,
@@ -218,13 +216,13 @@ async def submit_answer(session_id: str, body: AnswerRequest) -> AnswerResponse:
     session_complete = next_index >= len(questions)
     next_question = questions[next_index] if not session_complete else None
 
-    _sessions[session_id] = {
+    set_session(session_id, {
         **state,
         "results": results,
         "current_index": next_index,
         "current_question": next_question,
         "phase": "complete" if session_complete else "interview",
-    }
+    })
 
     log_turn_metrics(
         question_index=body.question_index,
@@ -261,7 +259,7 @@ async def get_hint(session_id: str, body: HintRequest) -> HintResponse:
 
     # Mark that a hint was used for the current question; /answer consumes it.
     state["hint_used"] = True
-    _sessions[session_id] = state
+    set_session(session_id, state)
 
     return HintResponse(hint=hint)
 
@@ -293,6 +291,6 @@ async def get_session_report(session_id: str) -> dict[str, Any]:
         final_overall=report["avg_overall"],
     )
 
-    _sessions[session_id] = {**state, "report": report, "phase": "done"}
+    set_session(session_id, {**state, "report": report, "phase": "done"})
 
     return report

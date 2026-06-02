@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: loopprep-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    envVars:
+      - key: PYTHONPATH
+        value: .
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      # ── Required — set these in the Render dashboard ──────────────────────────
+      - key: WANDB_API_KEY
+        sync: false
+      - key: WANDB_ENTITY
+        sync: false
+      - key: WANDB_PROJECT
+        value: loopprep
+      - key: TAVILY_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
+      # ── After Vercel deploys, paste your Vercel URL here ──────────────────────
+      # Replace https://YOUR-APP.vercel.app with your actual Vercel URL
+      - key: CORS_ORIGINS
+        value: https://YOUR-APP.vercel.app
+      # ── Models (override if needed) ──────────────────────────────────────────
+      - key: MODEL_REPORT
+        value: meta-llama/Llama-3.3-70B-Instruct
